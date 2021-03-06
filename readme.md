@@ -1,6 +1,6 @@
 # libmmenu
 
-MinUI aims to double-down on the good ideas of the official TrimUI firmware: the simplicity and consistency of the UI. The best of which is probably the in-emulator menu. libmmenu reimplements this functionality but extends it to allow opening the emulator's built-in settings from that menu.
+[MinUI](https://github.com/shauninman/minui) aims to double-down on the good ideas of the official TrimUI firmware: the simplicity and consistency of the UI. The best of which is probably the in-emulator menu. libmmenu reimplements this functionality but extends it to allow opening the emulator's built-in settings from that menu.
 
 ## Prerequisites
 
