@@ -10,10 +10,10 @@ To be a good citizen in the MinUI eco-system an emulator should observe a follow
 * Emulators should save state and config files inside a _hidden_ folder inside their rom folder.
 * Default key bindings should map as closely as possible to the original console, either by position, or preferably, by name. While unlabeled on the device, the agreed upon arrangement is:
 
-			L												 R	
-			   UP										X/△	
-		LEFT		RIGHT							Y/□		A/◯
-			  DOWN			SELECT	MENU	START		B/☓
+		    L                                                   R
+		       UP                                          X/△
+		LEFT        RIGHT                           Y/□           A/◯
+		      DOWN         SELECT    MENU    START         B/☓
 
 * Power and reset buttons or custom hotkeys should not be bound by default (eg. mapping "load quicksave" to L while convenient will conflict with the system-wide brightness shortcut and could cause an unsuspecting player to lose their progress)
 * Emulators should not draw messages on screen, "Press MENU to open menu" and "Loaded save slot 0" should be obvious. On such a small screen, these messages can obscure important gameplay information that can, at best, result in an inconvenient delay, or at worst, a game over
