@@ -13,7 +13,7 @@ typedef enum MenuReturnStatus {
 
 typedef enum MenuReturnEvent {
 	kMenuEventKeyDown = 0,
-	kMenuEventKeyUp = 1, // use if emulated doesn't distinguish between down and just down, eg. race-od
+	kMenuEventKeyUp = 1, // use if emulator doesn't distinguish between down and just down, eg. race-od
 } MenuReturnEvent;
 
 typedef MenuReturnStatus (*ShowMenu_t)(char* rom_path, char* save_path_template, SDL_Surface* frame, MenuReturnEvent keyEvent);
