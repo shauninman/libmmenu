@@ -17,12 +17,12 @@ LDFLAGS = -s -lSDL -lSDL_image -lSDL_ttf -lz -lm
 OPTM=-Ofast
 
 build: 
-	$(CC) -c -Wall -Werror -fpic "src/$(TARGET).c" -lSDL $(OPTM)
-	$(CC) -shared -o "Install lib$(TARGET).pak/lib$(TARGET).so" "$(TARGET).o"
-	cp "src/$(TARGET).h" "$(PREFIX)/include"
-	cp "Install lib$(TARGET).pak/lib$(TARGET).so" "$(PREFIX)/lib"
+	$(CC) -c -Wall -Werror -fpic "$(TARGET).c" $(CFLAGS) $(LDFLAGS) $(OPTM)
+	$(CC) -shared -o "lib$(TARGET).so" "$(TARGET).o"
+	cp "$(TARGET).h" "$(PREFIX)/include"
+	cp "lib$(TARGET).so" "$(PREFIX)/lib"
 clean:
 	rm -f *.o
-	rm -f "Install lib$(TARGET).pak/lib$(TARGET).so"
+	rm -f "lib$(TARGET).so"
 	rm -f $(PREFIX)/include/$(TARGET).h
 	rm -f $(PREFIX)/lib/lib$(TARGET).so
