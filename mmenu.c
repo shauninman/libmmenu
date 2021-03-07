@@ -140,7 +140,7 @@ typedef struct __attribute__((__packed__)) uint24_t {
 	uint8_t a,b,c;
 } uint24_t;
 static SDL_Surface* thumbnail(SDL_Surface* src_img) {
-	unsigned long then = SDL_GetTicks();
+	// unsigned long then = SDL_GetTicks();
 	SDL_Surface* dst_img = SDL_CreateRGBSurface(0,160,120,src_img->format->BitsPerPixel,src_img->format->Rmask,src_img->format->Gmask,src_img->format->Bmask,src_img->format->Amask);
 
 	uint8_t* src_px = src_img->pixels;
@@ -171,7 +171,7 @@ static SDL_Surface* thumbnail(SDL_Surface* src_img) {
 		src_px += stride;
 	}
 	// SDL_UnlockSurface(dst_img);
-	printf("duration %lums\n", SDL_GetTicks() - then); // 3ms on device, 2ms with -O3/-Ofast
+	// printf("duration %lums\n", SDL_GetTicks() - then); // 3ms on device, 2ms with -O3/-Ofast
 
 	return dst_img;
 }

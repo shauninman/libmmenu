@@ -57,6 +57,10 @@ Open up the emulator's makefile and add the following to `LDFLAGS`:
 
 	-lSDL_image -lSDL_ttf -ldl
 
+If present, remove the following from `LDFLAGS` (otherwise the above libraries won't be linked if they're not already used by the emulator):
+
+	-Wl,--as-needed
+
 Determine where the emulator's menu function is called (usually in an input handling loop). Add the following headers:
 
 	#include <dlfcn.h>
