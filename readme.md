@@ -8,7 +8,7 @@ To be a good citizen in the MinUI eco-system an emulator should observe the foll
 
 * The MENU button (and only the MENU button) should (only) open the menu.
 * Emulators should save state and config files inside a _hidden_ folder inside their rom folder.
-* Default key bindings should map as closely as possible to the original console, either by position, or preferably, by name. While unlabeled on the device, the agreed upon arrangement is:
+* Default key bindings should map as closely as possible to the original console, either by position, or preferably, by name (eg. don't map shoulder buttons or START/SELECT to Y/X). While unlabeled on the device, the agreed upon arrangement is:
 
 		    L                                                   R
 		       UP                                          X/△
