@@ -180,8 +180,6 @@ static SDL_Surface* thumbnail(SDL_Surface* src_img) {
 static int slot = 0;
 
 MenuReturnStatus ShowMenu(char* rom_path, char* save_path_template, SDL_Surface* frame, MenuReturnEvent keyEvent) {	
-	system("keymon &");
-	
 	SDL_Surface* text;
 	SDL_Surface* copy = SDL_CreateRGBSurface(SDL_SWSURFACE, 320, 240, 16, 0, 0, 0, 0);	
 	SDL_BlitSurface(frame, NULL, copy, NULL);
@@ -419,8 +417,6 @@ MenuReturnStatus ShowMenu(char* rom_path, char* save_path_template, SDL_Surface*
 	SDL_FreeSurface(copy);
 	SDL_FillRect(buffer, NULL, 0);
 	SDL_Flip(screen);
-	
-	system("killall keymon");
 	
 	return status;
 }
