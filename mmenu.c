@@ -414,8 +414,9 @@ MenuReturnStatus ShowMenu(char* rom_path, char* save_path_template, SDL_Surface*
 		}
 	}
 	
+	// push emulator screen so any lag is on the emulator not our menu (because it is!)
+	SDL_BlitSurface(copy, NULL, screen, NULL);
 	SDL_FreeSurface(copy);
-	SDL_FillRect(buffer, NULL, 0);
 	SDL_Flip(screen);
 	
 	return status;
