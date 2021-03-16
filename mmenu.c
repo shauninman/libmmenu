@@ -5,6 +5,12 @@
 #include <SDL/SDL_image.h>
 #include <SDL/SDL_ttf.h>
 
+#include <dlfcn.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <sys/mman.h>
+
 #include "mmenu.h"
 
 #define TRIMUI_UP 		SDLK_UP
@@ -61,9 +67,96 @@ static void error_handler(int sig) {
 	exit(1);
 }
 
+///////////////////////////////////////
+// TODO: just copied from MinUI/main.c :shrug:
+
+static int* key[10];
+static int (*GetKeyShm)(void*,int);
+
+static void* (*setVolume)(int);
+static void (*setBrightness)(int);
+static int getVolume(void) {
+	return GetKeyShm(key, 0);
+}
+static int getBrightness(void) {
+	return GetKeyShm(key, 1);
+}
+
+static void initTrimuiAPI(void) {
+	void* libtinyalsa = dlopen("/usr/lib/libtinyalsa.so", RTLD_NOW|RTLD_GLOBAL);
+	void* libshmvar = dlopen("/usr/trimui/lib/libshmvar.so", RTLD_NOW|RTLD_GLOBAL);
+	void* libtmenu = dlopen("/usr/trimui/lib/libtmenu.so", RTLD_LAZY);
+
+	setBrightness = dlsym(libtmenu, "setLCDBrightness");
+	setVolume = dlsym(libtmenu, "sunxi_set_volume");
+
+	void (*InitKeyShm)(int* [10]) = dlsym(libshmvar, "InitKeyShm");
+	GetKeyShm = dlsym(libshmvar, "GetKeyShm");
+
+	InitKeyShm(key);
+}
+
+#define kCPULow 0x00c00532 // 192MHz (lowest)
+#define kCPUNormal 0x02d01d22 // 720MHz (default)
+#define kCPUHigh 0x03601a32 // 864MHz (highest stable)
+
+static void setCPU(uint32_t mhz) {
+	volatile uint32_t* mem;
+	volatile uint8_t memdev = 0;
+	memdev = open("/dev/mem", O_RDWR);
+	if (memdev>0) {
+		mem = (uint32_t*)mmap(0, 0x1000, PROT_READ | PROT_WRITE, MAP_SHARED, memdev, 0x01c20000);
+		if (mem==MAP_FAILED) {
+			puts("Could not mmap CPU hardware registers!");
+			close(memdev);
+			return;
+		}
+	}
+	else puts("Could not open /dev/mem");
+	
+	uint32_t v = mem[0];
+	v &= 0xffff0000;
+	v |= (mhz & 0x0000ffff);
+	mem[0] = v;
+	
+	if (memdev>0) close(memdev);
+}
+
+static void fauxSleep(void) {
+	int v = getVolume();
+	int b = getBrightness();
+	// printf("before v:%i b:%i\n",v,b);
+	setVolume(0);
+	setBrightness(0);
+	setCPU(kCPULow);
+	
+	SDL_Event event;
+	int wake = 0;
+	while (!wake) {
+		SDL_Delay(1000);
+		while (SDL_PollEvent(&event)) {
+			if (event.type==SDL_KEYDOWN && event.key.keysym.sym==SDLK_ESCAPE) {
+				wake = 1;
+			}
+		}
+	}
+	
+	setVolume(v);
+	setBrightness(b);
+	setCPU(kCPUNormal);
+	
+	// v = getVolume();
+	// b = getBrightness();
+	// printf("after v:%i b:%i\n",v,b);
+}
+
+///////////////////////////////////////
+
 __attribute__((constructor)) static void init(void) {
 	signal(SIGSEGV, error_handler); // runtime error reporting
-
+	
+	initTrimuiAPI();
+	
 	SDL_Init(SDL_INIT_VIDEO);
 	TTF_Init();
 	
@@ -226,12 +319,16 @@ MenuReturnStatus ShowMenu(char* rom_path, char* save_path_template, SDL_Surface*
 	int save_exists = 0;
 	int preview_exists = 0;
 	SDL_Event event;
+	unsigned long cancel_start = SDL_GetTicks();
 	while (!quit) {
+		unsigned long frame_start = SDL_GetTicks();
+		int pressed_menu = 0;
 		while (SDL_PollEvent(&event)) {
 			switch( event.type ){
 				case SDL_KEYUP: {
 					if (acted && keyEvent==kMenuEventKeyUp) {
 						SDLKey key = event.key.keysym.sym;
+						cancel_start = SDL_GetTicks();
 						if (key==TRIMUI_B || key==TRIMUI_A) {
 							quit = 1;
 						}
@@ -239,8 +336,8 @@ MenuReturnStatus ShowMenu(char* rom_path, char* save_path_template, SDL_Surface*
 				} break;
 				case SDL_KEYDOWN: {
 					if (acted) break;
-					
 					SDLKey key = event.key.keysym.sym;
+					cancel_start = SDL_GetTicks();
 					if (key==TRIMUI_UP) {
 						selected -= 1;
 						if (selected<0) selected += kItemCount;
@@ -270,7 +367,10 @@ MenuReturnStatus ShowMenu(char* rom_path, char* save_path_template, SDL_Surface*
 						preview_exists = save_exists && access(bmp_path, F_OK)==0;
 					}
 				
-					if (key==TRIMUI_MENU || key==TRIMUI_B) {
+					if (key==TRIMUI_MENU) {
+						pressed_menu = 1;
+					}
+					else if (key==TRIMUI_B) {
 						if (keyEvent==kMenuEventKeyDown) quit = 1;
 						else acted = 1;
 						
@@ -311,6 +411,18 @@ MenuReturnStatus ShowMenu(char* rom_path, char* save_path_template, SDL_Surface*
 					}
 				} break;
 			}
+		}
+		
+		#define kSleepDelay 60000 // 1m
+		if (pressed_menu || SDL_GetTicks()-cancel_start>=kSleepDelay) {
+			SDL_FillRect(buffer, NULL, 0);
+			SDL_BlitSurface(buffer, NULL, screen, NULL);
+			SDL_Flip(screen);
+
+			fauxSleep();
+
+			cancel_start = SDL_GetTicks();
+			is_dirty = 1;
 		}
 		
 		if (is_dirty) {
@@ -412,6 +524,12 @@ MenuReturnStatus ShowMenu(char* rom_path, char* save_path_template, SDL_Surface*
 			
 			is_dirty = 0;
 		}
+		
+		// slow down to 60fps
+		unsigned long frame_duration = SDL_GetTicks() - frame_start; // 0-1 on non-dirty frames, 11-12 on dirty ones
+		// printf("frame_duration:%lu\n", frame_duration);
+		#define kTargetFrameDuration 17
+		if (frame_duration<kTargetFrameDuration) SDL_Delay(kTargetFrameDuration-frame_duration);
 	}
 	
 	// push emulator screen so any lag is on the emulator not our menu (because it is!)

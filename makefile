@@ -12,12 +12,12 @@ SYSROOT     := $(shell $(CC) --print-sysroot)
 
 INCLUDEDIR = $(SYSROOT)/usr/include
 CFLAGS = -I$(INCLUDEDIR)
-LDFLAGS = -s -lSDL -lSDL_image -lSDL_ttf -lz -lm
+LDFLAGS = -s -lSDL -lSDL_image -lSDL_ttf -lz -lm -ldl
 
 OPTM=-Ofast
 
 build: 
-	$(CC) -c -Wall -Werror -fpic "$(TARGET).c" $(CFLAGS) $(LDFLAGS) $(OPTM)
+	$(CC) -c -Werror -fpic "$(TARGET).c" $(CFLAGS) $(LDFLAGS) $(OPTM)
 	$(CC) -shared -o "lib$(TARGET).so" "$(TARGET).o"
 	cp "$(TARGET).h" "$(PREFIX)/include"
 	cp "lib$(TARGET).so" "$(PREFIX)/lib"
