@@ -448,8 +448,14 @@ MenuReturnStatus ShowMenu(char* rom_path, char* save_path_template, SDL_Surface*
 		
 		#define kSleepDelay 30000
 		if (pressed_menu || frame_start-cancel_start>=kSleepDelay) {
+			SDL_FillRect(buffer, NULL, 0);
+			SDL_BlitSurface(buffer, NULL, screen, NULL);
+			SDL_Flip(screen);
+			
 			fauxSleep();
 			cancel_start = SDL_GetTicks();
+			
+			is_dirty = 1;
 		}
 		
 		if (is_dirty) {
