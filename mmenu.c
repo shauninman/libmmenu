@@ -144,7 +144,7 @@ static void fauxSleep(void) {
 	setBrightness(0);
 	setCPU(kCPUDead);
 	
-	system("echo 1 > /sys/devices/virtual/disp/disp/attr/suspend");
+	// system("echo 1 > /sys/devices/virtual/disp/disp/attr/suspend");
 	
 	SDL_Event event;
 	int L = 0;
@@ -174,9 +174,9 @@ static void fauxSleep(void) {
 	setBrightness(b);
 	setCPU(kCPUNormal);
 
-	system("echo 0 > /sys/devices/virtual/disp/disp/attr/suspend");
-	initLCD();
-	setBrightness(b);
+	// system("echo 0 > /sys/devices/virtual/disp/disp/attr/suspend");
+	// initLCD();
+	// setBrightness(b);
 	
 	// v = getVolume();
 	// b = getBrightness();
