@@ -38,6 +38,7 @@ static SDL_Surface* ui_slot_bg;
 static SDL_Surface* ui_slot_overlay;
 static SDL_Surface* ui_browse_icon;
 static SDL_Surface* ui_round_button;
+static SDL_Surface* ui_menu_icon;
 static SDL_Surface* ui_arrow_right;
 static SDL_Surface* ui_arrow_right_w;
 static SDL_Surface* ui_selected_dot;
@@ -212,6 +213,7 @@ __attribute__((constructor)) static void init(void) {
 	
 	ui_browse_icon = IMG_Load("/usr/trimui/res/skin/stat-nav-icon.png");
 	ui_round_button = IMG_Load("/mnt/SDCARD/System.pak/res/nav-bar-item-bg.png");
+	ui_menu_icon = IMG_Load("/usr/trimui/res/skin/stat-menu-icon.png");
 	
 	ui_arrow_right = IMG_Load("/usr/trimui/res/skin/right-arrow-icon-normal-small.png");
 	ui_arrow_right_w = IMG_Load("/usr/trimui/res/skin/right-arrow-small.png");
@@ -228,6 +230,7 @@ __attribute__((destructor)) static void quit(void) {
 	SDL_FreeSurface(ui_arrow_right);
 	SDL_FreeSurface(ui_arrow_right_w);
 	SDL_FreeSurface(ui_browse_icon);
+	SDL_FreeSurface(ui_menu_icon);
 	SDL_FreeSurface(ui_round_button);
 	SDL_FreeSurface(ui_slot_overlay);
 	SDL_FreeSurface(ui_slot_bg);
@@ -525,9 +528,9 @@ MenuReturnStatus ShowMenu(char* rom_path, char* save_path_template, SDL_Surface*
 				// hints
 				{
 					// browse
-					SDL_BlitSurface(ui_browse_icon, NULL, buffer, &(SDL_Rect){10,218-1,0,0});
-					text = TTF_RenderUTF8_Blended(tiny, "BROWSE", white);
-					SDL_BlitSurface(text, NULL, buffer, &(SDL_Rect){36,220-1,0,0});
+					SDL_BlitSurface(ui_menu_icon, NULL, buffer, &(SDL_Rect){10,218-1,0,0});
+					text = TTF_RenderUTF8_Blended(tiny, "SLEEP", white);
+					SDL_BlitSurface(text, NULL, buffer, &(SDL_Rect){56,220-1,0,0});
 					SDL_FreeSurface(text);
 	
 					// A (varies)
