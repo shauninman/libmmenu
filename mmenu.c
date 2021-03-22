@@ -146,6 +146,7 @@ static void fauxSleep(void) {
 	setCPU(kCPUDead);
 	
 	// system("echo 1 > /sys/devices/virtual/disp/disp/attr/suspend");
+	system("killall -s STOP keymon");
 	
 	SDL_Event event;
 	int L = 0;
@@ -175,6 +176,7 @@ static void fauxSleep(void) {
 	setBrightness(b);
 	setCPU(kCPUNormal);
 
+	system("killall -s CONT keymon");
 	// system("echo 0 > /sys/devices/virtual/disp/disp/attr/suspend");
 	// initLCD();
 	// setBrightness(b);
