@@ -210,16 +210,16 @@ __attribute__((constructor)) static void init(void) {
 	ui_bottom_bar = IMG_Load("/usr/trimui/res/skin/statbg.png");
 	ui_menu_bg = IMG_Load("/usr/trimui/res/skin/menu-5line-bg.png");
 	ui_menu_bar = IMG_Load("/usr/trimui/res/skin/list-item-select-bg-short.png");
-	ui_slot_bg = IMG_Load("/mnt/SDCARD/System.pak/res/save-slot-bg.png");
-	ui_slot_overlay = IMG_Load("/mnt/SDCARD/System.pak/res/save-slot-overlay.png");
+	ui_slot_bg = IMG_Load("/mnt/SDCARD/System/res/save-slot-bg.png");
+	ui_slot_overlay = IMG_Load("/mnt/SDCARD/System/res/save-slot-overlay.png");
 	
 	ui_browse_icon = IMG_Load("/usr/trimui/res/skin/stat-nav-icon.png");
-	ui_round_button = IMG_Load("/mnt/SDCARD/System.pak/res/nav-bar-item-bg.png");
+	ui_round_button = IMG_Load("/mnt/SDCARD/System/res/nav-bar-item-bg.png");
 	ui_menu_icon = IMG_Load("/usr/trimui/res/skin/stat-menu-icon.png");
 	
 	ui_arrow_right = IMG_Load("/usr/trimui/res/skin/right-arrow-icon-normal-small.png");
 	ui_arrow_right_w = IMG_Load("/usr/trimui/res/skin/right-arrow-small.png");
-	ui_selected_dot = IMG_Load("/mnt/SDCARD/System.pak/res/selected-slot-dot.png");
+	ui_selected_dot = IMG_Load("/mnt/SDCARD/System/res/selected-slot-dot.png");
 	
 	ui_empty_slot = TTF_RenderUTF8_Blended(tiny, "Empty Slot", gold);
 	ui_no_preview = TTF_RenderUTF8_Blended(tiny, "No Preview", gold);
