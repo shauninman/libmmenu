@@ -397,6 +397,11 @@ MenuReturnStatus ShowMenu(char* rom_path, char* save_path_template, SDL_Surface*
 						is_dirty = 1;
 					}
 				
+					// if (key==TRIMUI_X) {
+					// 	SDL_RWops* out = SDL_RWFromFile("/mnt/SDCARD/.minui/screenshot.bmp", "wb");
+					// 	SDL_SaveBMP_RW(screen, out, 1);
+					// }
+				
 					if (is_dirty && (selected==kItemSave || selected==kItemLoad)) {
 						sprintf(save_path, save_path_template, slot);
 						sprintf(bmp_path, "%s/%s.%d.bmp", bmp_dir, rom_file, slot);
