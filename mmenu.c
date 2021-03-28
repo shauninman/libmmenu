@@ -339,9 +339,8 @@ MenuReturnStatus ShowMenu(char* rom_path, char* save_path_template, SDL_Surface*
 	
 	char bmp_dir[128]; // /full/path/to/rom_dir/.mmenu
 	strcpy(bmp_dir, rom_path);
-	tmp = strrchr(bmp_dir,'/');
-	if (tmp==NULL) tmp = bmp_dir;
-	else tmp += 1;
+	tmp = bmp_dir + strlen("/mnt/SDCARD/Roms/");
+	tmp = strchr(tmp, '/') + 1;
 	strcpy(tmp, ".mmenu");
 	mkdir(bmp_dir, 0755);
 	
