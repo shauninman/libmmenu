@@ -36,6 +36,7 @@ static SDL_Surface* ui_menu_bg;
 static SDL_Surface* ui_menu_bar;
 static SDL_Surface* ui_slot_bg;
 static SDL_Surface* ui_slot_overlay;
+static SDL_Surface* ui_disc_bg;
 static SDL_Surface* ui_browse_icon;
 static SDL_Surface* ui_round_button;
 static SDL_Surface* ui_menu_icon;
@@ -212,6 +213,7 @@ __attribute__((constructor)) static void init(void) {
 	ui_menu_bar = IMG_Load("/usr/trimui/res/skin/list-item-select-bg-short.png");
 	ui_slot_bg = IMG_Load("/mnt/SDCARD/System/res/save-slot-bg.png");
 	ui_slot_overlay = IMG_Load("/mnt/SDCARD/System/res/save-slot-overlay.png");
+	ui_disc_bg = IMG_Load("/mnt/SDCARD/System/res/disc-bg.png");
 	
 	ui_browse_icon = IMG_Load("/usr/trimui/res/skin/stat-nav-icon.png");
 	ui_round_button = IMG_Load("/mnt/SDCARD/System/res/nav-bar-item-bg.png");
@@ -234,6 +236,7 @@ __attribute__((destructor)) static void quit(void) {
 	SDL_FreeSurface(ui_browse_icon);
 	SDL_FreeSurface(ui_menu_icon);
 	SDL_FreeSurface(ui_round_button);
+	SDL_FreeSurface(ui_disc_bg);
 	SDL_FreeSurface(ui_slot_overlay);
 	SDL_FreeSurface(ui_slot_bg);
 	SDL_FreeSurface(ui_menu_bar);
@@ -307,6 +310,19 @@ static SDL_Surface* thumbnail(SDL_Surface* src_img) {
 	return dst_img;
 }
 
+static char* copy_string(char* str) {
+	int len = strlen(str);
+	char* copy = malloc(sizeof(char)*(len+1));
+	strcpy(copy, str);
+	copy[len] = '\0';
+	return copy;
+} // NOTE: caller must free() result!
+static int exact_match(char* str1, char* str2) {
+	int len1 = strlen(str1);
+	if (len1!=strlen(str2)) return 0;
+	return  (strncmp(str1,str2,len1)==0);
+}
+
 #define kSlotCount 8
 static int slot = 0;
 
@@ -317,7 +333,7 @@ MenuReturnStatus ShowMenu(char* rom_path, char* save_path_template, SDL_Surface*
 	
 	char* tmp;
 	char rom_file[128]; // with extension
-	char rom_name[128]; // without
+	char rom_name[128]; // without extension or cruft
 	
 	tmp = strrchr(rom_path,'/');
 	if (tmp==NULL) tmp = rom_path;
@@ -343,6 +359,74 @@ MenuReturnStatus ShowMenu(char* rom_path, char* save_path_template, SDL_Surface*
 	tmp = strchr(tmp, '/') + 1;
 	strcpy(tmp, ".mmenu");
 	mkdir(bmp_dir, 0755);
+	
+	// TODO: this should be in a function
+	// does this game have an m3u?
+	int rom_disc = -1;
+	int disc = rom_disc;
+	int total_discs = 0;
+	char disc_name[16];
+	char* disc_paths[9]; // up to 9 paths, Arc the Lad Collection is 7 discs
+	{
+		// construct m3u path based on parent directory
+		char m3u_path[256];
+		strcpy(m3u_path, rom_path);
+		tmp = strrchr(m3u_path, '/') + 1;
+		tmp[0] = '\0';
+	
+		// path to parent directory
+		char base_path[128];
+		strcpy(base_path, m3u_path);
+	
+		tmp = strrchr(m3u_path, '/');
+		tmp[0] = '\0';
+	
+		// get parent directory name
+		char dir_name[128];
+		tmp = strrchr(m3u_path, '/');
+		strcpy(dir_name, tmp);
+	
+		// dir_name is also our m3u file name
+		tmp = m3u_path + strlen(m3u_path); 
+		strcpy(tmp, dir_name);
+	
+		// add extension
+		tmp = m3u_path + strlen(m3u_path);
+		strcpy(tmp, ".m3u");
+	
+		if (access(m3u_path, F_OK)==0) {
+			// TODO: read m3u
+			// does rom_file match any line of m3u?
+			// that's our disc
+			// also note total_discs
+			
+			FILE* file = fopen(m3u_path, "r");
+			if (file) {
+				char line[256];
+				while (fgets(line,256,file)!=NULL) {
+					int len = strlen(line);
+					if (len>0 && line[len-1]=='\n') line[len-1] = 0; // trim newline
+					if (strlen(line)==0) continue; // skip empty lines
+			
+					char disc_path[256];
+					strcpy(disc_path, base_path);
+					tmp = disc_path + strlen(disc_path);
+					strcpy(tmp, line);
+					
+					if (access(disc_path, F_OK)==0) {
+						disc_paths[total_discs] = copy_string(disc_path);
+						if (exact_match(disc_path, rom_path)) {
+							rom_disc = total_discs;
+							disc = rom_disc;
+							sprintf(disc_name, "Disc %i", disc+1);
+						}
+						total_discs += 1;
+					}
+				}
+				fclose(file);
+			}
+		}
+	}
 	
 	int status = kStatusContinue;
 	int selected = 0; // resets every launch
@@ -386,14 +470,30 @@ MenuReturnStatus ShowMenu(char* rom_path, char* save_path_template, SDL_Surface*
 						is_dirty = 1;
 					}
 					else if (key==TRIMUI_LEFT) {
-						slot -= 1;
-						if (slot<0) slot += kSlotCount;
-						is_dirty = 1;
+						if (total_discs && selected==kItemContinue) {
+							disc -= 1;
+							if (disc<0) disc += total_discs;
+							is_dirty = 1;
+							sprintf(disc_name, "Disc %i", disc+1);
+						}
+						else if (selected==kItemSave || selected==kItemLoad) {
+	 						slot -= 1;
+							if (slot<0) slot += kSlotCount;
+							is_dirty = 1;
+						}
 					}
 					else if (key==TRIMUI_RIGHT) {
-						slot += 1;
-						if (slot==kSlotCount) slot -= kSlotCount;
-						is_dirty = 1;
+						if (total_discs && selected==kItemContinue) {
+							disc += 1;
+							if (disc==total_discs) disc -= total_discs;
+							is_dirty = 1;
+							sprintf(disc_name, "Disc %i", disc+1);
+						}
+						else if (selected==kItemSave || selected==kItemLoad) {
+							slot += 1;
+							if (slot==kSlotCount) slot -= kSlotCount;
+							is_dirty = 1;
+						}
 					}
 				
 					// if (key==TRIMUI_X) {
@@ -493,6 +593,11 @@ MenuReturnStatus ShowMenu(char* rom_path, char* save_path_template, SDL_Surface*
 					int y = 75;
 					for (int i=0; i<kItemCount; i++) {
 						char* item = items[i];
+						if (total_discs && i==kItemContinue) {
+							if (rom_disc!=disc) item = "Change to";
+							else item = "Continue on";
+						}
+						
 						SDL_Color color = gold;
 						if (i==selected) {
 							SDL_BlitSurface(ui_menu_bar, NULL, buffer, &(SDL_Rect){6,y,0,0});
@@ -503,7 +608,7 @@ MenuReturnStatus ShowMenu(char* rom_path, char* save_path_template, SDL_Surface*
 						SDL_BlitSurface(text, NULL, buffer, &(SDL_Rect){x,y+4,0,0});
 						SDL_FreeSurface(text);
 				
-						if (i==kItemSave || i==kItemLoad) {
+						if (i==kItemSave || i==kItemLoad || (total_discs && i==kItemContinue)) {
 							SDL_BlitSurface(i==selected?ui_arrow_right_w:ui_arrow_right, NULL, buffer, &(SDL_Rect){132,y+8,0,0});
 						}
 		
@@ -511,8 +616,16 @@ MenuReturnStatus ShowMenu(char* rom_path, char* save_path_template, SDL_Surface*
 					}
 				}
 			
+				// disc change
+				if (total_discs && selected==kItemContinue) {
+					SDL_BlitSurface(ui_disc_bg, NULL, buffer, &(SDL_Rect){148,71,0,0});
+					
+					text = TTF_RenderUTF8_Blended(font, disc_name, gold);
+					SDL_BlitSurface(text, NULL, buffer, &(SDL_Rect){210,75+4,0,0});
+					SDL_FreeSurface(text);
+				}
 				// slot preview
-				if (selected==kItemSave || selected==kItemLoad) {
+				else if (selected==kItemSave || selected==kItemLoad) {
 					SDL_BlitSurface(ui_slot_bg, NULL, buffer, &(SDL_Rect){148,71,0,0});
 				
 					if (preview_exists) { // has save, has preview
@@ -578,6 +691,10 @@ MenuReturnStatus ShowMenu(char* rom_path, char* save_path_template, SDL_Surface*
 	SDL_BlitSurface(copy, NULL, screen, NULL);
 	SDL_FreeSurface(copy);
 	SDL_Flip(screen);
+	
+	for (int i=0; i<total_discs; i++) {
+		free(disc_paths[i]);
+	}
 	
 	return status;
 }

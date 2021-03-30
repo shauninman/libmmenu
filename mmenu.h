@@ -8,7 +8,9 @@ typedef enum MenuReturnStatus {
 	kStatusSaveSlot = 1,
 	kStatusLoadSlot = 11,
 	kStatusOpenMenu = 23,
-	kStatusExitGame = 31
+	kStatusExitGame = 31,
+	kStatusChangeDisc = 63,
+	kStatusMaxValue = 127,
 } MenuReturnStatus;
 
 typedef enum MenuReturnEvent {
