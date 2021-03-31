@@ -360,14 +360,20 @@ MenuReturnStatus ShowMenu(char* rom_path, char* save_path_template, SDL_Surface*
 	strcpy(tmp, ".mmenu");
 	mkdir(bmp_dir, 0755);
 	
-	// TODO: this should be in a function
 	// does this game have an m3u?
 	int rom_disc = -1;
 	int disc = rom_disc;
 	int total_discs = 0;
 	char disc_name[16];
 	char* disc_paths[9]; // up to 9 paths, Arc the Lad Collection is 7 discs
-	{
+	char ext[8];
+	tmp = strrchr(rom_path, '.');
+	strncpy(ext, tmp, 8);
+	for (int i=0; i<4; i++) {
+		ext[i] = tolower(ext[i]);
+	}
+	// only check for m3u if rom is a cue
+	if (strncmp(ext, ".cue", 8)==0) {
 		// construct m3u path based on parent directory
 		char m3u_path[256];
 		strcpy(m3u_path, rom_path);
@@ -395,11 +401,7 @@ MenuReturnStatus ShowMenu(char* rom_path, char* save_path_template, SDL_Surface*
 		strcpy(tmp, ".m3u");
 	
 		if (access(m3u_path, F_OK)==0) {
-			// TODO: read m3u
-			// does rom_file match any line of m3u?
-			// that's our disc
-			// also note total_discs
-			
+			//read m3u file
 			FILE* file = fopen(m3u_path, "r");
 			if (file) {
 				char line[256];
@@ -413,8 +415,10 @@ MenuReturnStatus ShowMenu(char* rom_path, char* save_path_template, SDL_Surface*
 					tmp = disc_path + strlen(disc_path);
 					strcpy(tmp, line);
 					
+					// found a valid disc path
 					if (access(disc_path, F_OK)==0) {
 						disc_paths[total_discs] = copy_string(disc_path);
+						// matched our current disc
 						if (exact_match(disc_path, rom_path)) {
 							rom_disc = total_discs;
 							disc = rom_disc;
@@ -527,7 +531,17 @@ MenuReturnStatus ShowMenu(char* rom_path, char* save_path_template, SDL_Surface*
 						
 						switch(selected) {
 							case kItemContinue:
-								status = kStatusContinue;
+								if (total_discs && rom_disc!=disc) {
+									status = kStatusChangeDisc;
+									FILE* file = fopen("/tmp/change_disc", "w");
+									if (file) {
+										fputs(disc_paths[disc], file);
+										fclose(file);
+									}
+								}
+								else {
+									status = kStatusContinue;
+								}
 							break;
 							case kItemSave:
 								status = kStatusSaveSlot + slot;
@@ -594,8 +608,8 @@ MenuReturnStatus ShowMenu(char* rom_path, char* save_path_template, SDL_Surface*
 					for (int i=0; i<kItemCount; i++) {
 						char* item = items[i];
 						if (total_discs && i==kItemContinue) {
-							if (rom_disc!=disc) item = "Change to";
-							else item = "Continue on";
+							if (rom_disc!=disc) item = "Insert";
+							else item = "Continue";
 						}
 						
 						SDL_Color color = gold;
