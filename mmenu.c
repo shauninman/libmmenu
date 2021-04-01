@@ -70,6 +70,24 @@ static void error_handler(int sig) {
 }
 
 ///////////////////////////////////////
+
+// only use to write single-line files!
+void put_file(char* path, char* contents) {
+	FILE* file = fopen(path, "w");
+	fputs(contents, file);
+	fclose(file);
+}
+void get_file(char* path, char* buffer) {
+	FILE *file = fopen(path, "r");
+	fseek(file, 0L, SEEK_END);
+	size_t size = ftell(file);
+	rewind(file);
+	fread(buffer, size, sizeof(char), file);
+	fclose(file);
+	buffer[size] = '\0';
+}
+
+///////////////////////////////////////
 // TODO: just copied from MinUI/main.c :shrug:
 
 static int* key[10];
@@ -533,11 +551,8 @@ MenuReturnStatus ShowMenu(char* rom_path, char* save_path_template, SDL_Surface*
 							case kItemContinue:
 								if (total_discs && rom_disc!=disc) {
 									status = kStatusChangeDisc;
-									FILE* file = fopen("/tmp/change_disc", "w");
-									if (file) {
-										fputs(disc_paths[disc], file);
-										fclose(file);
-									}
+									put_file("/tmp/last.txt", disc_paths[disc]);
+									put_file("/tmp/change_disc.txt", disc_paths[disc]);
 								}
 								else {
 									status = kStatusContinue;
