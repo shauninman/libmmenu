@@ -551,8 +551,13 @@ MenuReturnStatus ShowMenu(char* rom_path, char* save_path_template, SDL_Surface*
 							case kItemContinue:
 								if (total_discs && rom_disc!=disc) {
 									status = kStatusChangeDisc;
-									put_file("/tmp/last.txt", disc_paths[disc]);
-									put_file("/tmp/change_disc.txt", disc_paths[disc]);
+									char* disc_path = disc_paths[disc];
+									char last_path[256];
+									get_file("/tmp/last.txt", last_path);
+									if (!exact_match(last_path, "/mnt/SDCARD/Recently Played")) {
+										put_file("/tmp/last.txt", disc_path);
+									}
+									put_file("/tmp/change_disc.txt", disc_path);
 								}
 								else {
 									status = kStatusContinue;
