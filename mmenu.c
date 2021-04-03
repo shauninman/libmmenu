@@ -87,6 +87,10 @@ static void get_file(char* path, char* buffer) {
 	buffer[size] = '\0';
 }
 
+static int exists(char* path) {
+	return access(path, F_OK)==0;
+}
+
 ///////////////////////////////////////
 // TODO: just copied from MinUI/main.c :shrug:
 
@@ -344,6 +348,27 @@ static int exact_match(char* str1, char* str2) {
 #define kSlotCount 8
 static int slot = 0;
 
+#define kRootDir "/mnt/SDCARD"
+#define kScreenshotsPath kRootDir "/.minui/screenshots.txt"
+#define kScreenshotPathTemplate kRootDir "/.minui/screenshots/screenshot-%i.bmp"
+static int screenshots = 0;
+void load_screenshots(void) {
+	if (exists(kScreenshotsPath)) {
+		char tmp[16];
+		get_file(kScreenshotsPath, tmp);
+		screenshots = atoi(tmp);
+	}
+}
+void save_screenshot(SDL_Surface* surface) {
+	char screenshot_path[256];
+	sprintf(screenshot_path, kScreenshotPathTemplate, ++screenshots);
+	SDL_RWops* out = SDL_RWFromFile(screenshot_path, "wb");
+	SDL_SaveBMP_RW(surface ? surface : screen, out, 1);
+	char count[16];
+	sprintf(count, "%i", screenshots);
+	put_file(kScreenshotsPath, count);
+}
+
 MenuReturnStatus ShowMenu(char* rom_path, char* save_path_template, SDL_Surface* frame, MenuReturnEvent keyEvent) {	
 	SDL_Surface* text;
 	SDL_Surface* copy = SDL_CreateRGBSurface(SDL_SWSURFACE, 320, 240, 16, 0, 0, 0, 0);	
@@ -418,7 +443,7 @@ MenuReturnStatus ShowMenu(char* rom_path, char* save_path_template, SDL_Surface*
 		tmp = m3u_path + strlen(m3u_path);
 		strcpy(tmp, ".m3u");
 	
-		if (access(m3u_path, F_OK)==0) {
+		if (exists(m3u_path)) {
 			//read m3u file
 			FILE* file = fopen(m3u_path, "r");
 			if (file) {
@@ -434,7 +459,7 @@ MenuReturnStatus ShowMenu(char* rom_path, char* save_path_template, SDL_Surface*
 					strcpy(tmp, line);
 					
 					// found a valid disc path
-					if (access(disc_path, F_OK)==0) {
+					if (exists(disc_path)) {
 						disc_paths[total_discs] = copy_string(disc_path);
 						// matched our current disc
 						if (exact_match(disc_path, rom_path)) {
@@ -449,6 +474,8 @@ MenuReturnStatus ShowMenu(char* rom_path, char* save_path_template, SDL_Surface*
 			}
 		}
 	}
+	
+	load_screenshots();
 	
 	int status = kStatusContinue;
 	int selected = 0; // resets every launch
@@ -518,17 +545,15 @@ MenuReturnStatus ShowMenu(char* rom_path, char* save_path_template, SDL_Surface*
 						}
 					}
 				
-					// if (key==TRIMUI_X) {
-					// 	SDL_RWops* out = SDL_RWFromFile("/mnt/SDCARD/.minui/screenshot.bmp", "wb");
-					// 	SDL_SaveBMP_RW(screen, out, 1);
-					// }
+					if (key==TRIMUI_X) save_screenshot(NULL);
+					if (key==TRIMUI_Y) save_screenshot(frame);
 				
 					if (is_dirty && (selected==kItemSave || selected==kItemLoad)) {
 						sprintf(save_path, save_path_template, slot);
 						sprintf(bmp_path, "%s/%s.%d.bmp", bmp_dir, rom_file, slot);
 					
-						save_exists = access(save_path, F_OK)==0;
-						preview_exists = save_exists && access(bmp_path, F_OK)==0;
+						save_exists = exists(save_path);
+						preview_exists = save_exists && exists(bmp_path);
 					}
 				
 					if (key==TRIMUI_MENU) {
