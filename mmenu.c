@@ -351,8 +351,11 @@ static int slot = 0;
 #define kRootDir "/mnt/SDCARD"
 #define kScreenshotsPath kRootDir "/.minui/screenshots.txt"
 #define kScreenshotPathTemplate kRootDir "/.minui/screenshots/screenshot-%i.bmp"
+static int enable_screenshots = 0;
 static int screenshots = 0;
 void load_screenshots(void) {
+	enable_screenshots = exists(kRootDir "/.minui/enable-screenshots");
+	if (!enable_screenshots) return;
 	if (exists(kScreenshotsPath)) {
 		char tmp[16];
 		get_file(kScreenshotsPath, tmp);
@@ -360,6 +363,8 @@ void load_screenshots(void) {
 	}
 }
 void save_screenshot(SDL_Surface* surface) {
+	if (!enable_screenshots) return;
+	
 	char screenshot_path[256];
 	sprintf(screenshot_path, kScreenshotPathTemplate, ++screenshots);
 	SDL_RWops* out = SDL_RWFromFile(screenshot_path, "wb");
@@ -544,9 +549,11 @@ MenuReturnStatus ShowMenu(char* rom_path, char* save_path_template, SDL_Surface*
 							is_dirty = 1;
 						}
 					}
-				
-					if (key==TRIMUI_X) save_screenshot(NULL);
-					if (key==TRIMUI_Y) save_screenshot(frame);
+					
+					if (enable_screenshots) {
+						if (key==TRIMUI_X) save_screenshot(NULL);
+						if (key==TRIMUI_Y) save_screenshot(frame);
+					}
 				
 					if (is_dirty && (selected==kItemSave || selected==kItemLoad)) {
 						sprintf(save_path, save_path_template, slot);
