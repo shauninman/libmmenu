@@ -277,7 +277,7 @@ __attribute__((destructor)) static void quit(void) {
 }
 
 #define kItemCount 5
-char* items[kItemCount] = {
+static char* items[kItemCount] = {
 	"Continue",
 	"Save",
 	"Load",
