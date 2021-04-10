@@ -378,6 +378,8 @@ MenuReturnStatus ShowMenu(char* rom_path, char* save_path_template, SDL_Surface*
 	SDL_Surface* copy = SDL_CreateRGBSurface(SDL_SWSURFACE, 320, 240, 16, 0, 0, 0, 0);	
 	SDL_BlitSurface(frame, NULL, copy, NULL);
 	
+	SDL_EnableKeyRepeat(300,100);
+	
 	char* tmp;
 	char rom_file[128]; // with extension
 	char rom_name[128]; // without extension or cruft
