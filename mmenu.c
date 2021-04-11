@@ -33,6 +33,7 @@ static SDL_Surface* overlay;
 static SDL_Surface* ui_top_bar;
 static SDL_Surface* ui_bottom_bar;
 static SDL_Surface* ui_menu_bg;
+static SDL_Surface* ui_menu3_bg;
 static SDL_Surface* ui_menu_bar;
 static SDL_Surface* ui_slot_bg;
 static SDL_Surface* ui_slot_overlay;
@@ -231,6 +232,7 @@ __attribute__((constructor)) static void init(void) {
 	ui_top_bar = IMG_Load("/usr/trimui/res/skin/navbg.png");
 	ui_bottom_bar = IMG_Load("/usr/trimui/res/skin/statbg.png");
 	ui_menu_bg = IMG_Load("/usr/trimui/res/skin/menu-5line-bg.png");
+	ui_menu3_bg = IMG_Load("/usr/trimui/res/skin/menu-3line-bg.png");
 	ui_menu_bar = IMG_Load("/usr/trimui/res/skin/list-item-select-bg-short.png");
 	ui_slot_bg = IMG_Load("/mnt/SDCARD/System/res/save-slot-bg.png");
 	ui_slot_overlay = IMG_Load("/mnt/SDCARD/System/res/save-slot-overlay.png");
@@ -261,6 +263,7 @@ __attribute__((destructor)) static void quit(void) {
 	SDL_FreeSurface(ui_slot_overlay);
 	SDL_FreeSurface(ui_slot_bg);
 	SDL_FreeSurface(ui_menu_bar);
+	SDL_FreeSurface(ui_menu3_bg);
 	SDL_FreeSurface(ui_menu_bg);
 	SDL_FreeSurface(ui_bottom_bar);
 	SDL_FreeSurface(ui_top_bar);
@@ -373,10 +376,12 @@ void save_screenshot(SDL_Surface* surface) {
 	put_file(kScreenshotsPath, count);
 }
 
-MenuReturnStatus ShowMenu(char* rom_path, char* save_path_template, SDL_Surface* frame, MenuReturnEvent keyEvent) {	
+MenuReturnStatus ShowMenu(char* rom_path, char* save_path_template, SDL_Surface* frame, MenuReturnEvent keyEvent) {
 	SDL_Surface* text;
 	SDL_Surface* copy = SDL_CreateRGBSurface(SDL_SWSURFACE, 320, 240, 16, 0, 0, 0, 0);	
 	SDL_BlitSurface(frame, NULL, copy, NULL);
+	
+	int supports_save_load = save_path_template!=NULL;
 	
 	SDL_EnableKeyRepeat(300,100);
 	
@@ -551,12 +556,18 @@ MenuReturnStatus ShowMenu(char* rom_path, char* save_path_template, SDL_Surface*
 						}
 					}
 					
+					if (!supports_save_load) {
+						// NOTE: should not be able to reach save load at this point
+						if (selected==kItemSave && key==TRIMUI_DOWN) selected += 2;
+						else if (selected==kItemLoad && key==TRIMUI_UP) selected -= 2;
+					}
+					
 					if (enable_screenshots) {
 						if (key==TRIMUI_X) save_screenshot(NULL);
-						if (key==TRIMUI_Y) save_screenshot(frame);
+						if (key==TRIMUI_Y) save_screenshot(copy);
 					}
 				
-					if (is_dirty && (selected==kItemSave || selected==kItemLoad)) {
+					if (is_dirty && (selected==kItemSave || selected==kItemLoad) && supports_save_load) {
 						sprintf(save_path, save_path_template, slot);
 						sprintf(bmp_path, "%s/%s.%d.bmp", bmp_dir, rom_file, slot);
 					
@@ -598,7 +609,7 @@ MenuReturnStatus ShowMenu(char* rom_path, char* save_path_template, SDL_Surface*
 							break;
 							case kItemSave:
 								status = kStatusSaveSlot + slot;
-								{
+								if (supports_save_load) {
 									SDL_Surface* preview = thumbnail(copy);
 									SDL_RWops* out = SDL_RWFromFile(bmp_path, "wb");
 									SDL_SaveBMP_RW(preview, out, 1);
@@ -653,11 +664,16 @@ MenuReturnStatus ShowMenu(char* rom_path, char* save_path_template, SDL_Surface*
 			
 				// menu
 				{
-					SDL_BlitSurface(ui_menu_bg, NULL, buffer, &(SDL_Rect){6,71,0,0});
-	
-					// menu
 					int x = 14;
 					int y = 75;
+					if (supports_save_load) {
+						SDL_BlitSurface(ui_menu_bg, NULL, buffer, &(SDL_Rect){6,71,0,0});
+					}
+					else {
+						SDL_BlitSurface(ui_menu3_bg, NULL, buffer, &(SDL_Rect){6,71+50,0,0});
+						y += 50;
+					}
+	
 					for (int i=0; i<kItemCount; i++) {
 						char* item = items[i];
 						if (total_discs && i==kItemContinue) {
@@ -665,12 +681,14 @@ MenuReturnStatus ShowMenu(char* rom_path, char* save_path_template, SDL_Surface*
 							else item = "Continue";
 						}
 						
+						if (!supports_save_load && (i==kItemSave || i==kItemLoad)) continue;
+							
 						SDL_Color color = gold;
 						if (i==selected) {
 							SDL_BlitSurface(ui_menu_bar, NULL, buffer, &(SDL_Rect){6,y,0,0});
 							color = white;
 						}
-		
+	
 						text = TTF_RenderUTF8_Blended(font, item, color);
 						SDL_BlitSurface(text, NULL, buffer, &(SDL_Rect){x,y+4,0,0});
 						SDL_FreeSurface(text);
@@ -692,7 +710,7 @@ MenuReturnStatus ShowMenu(char* rom_path, char* save_path_template, SDL_Surface*
 					SDL_FreeSurface(text);
 				}
 				// slot preview
-				else if (selected==kItemSave || selected==kItemLoad) {
+				else if (supports_save_load && (selected==kItemSave || selected==kItemLoad)) {
 					SDL_BlitSurface(ui_slot_bg, NULL, buffer, &(SDL_Rect){148,71,0,0});
 				
 					if (preview_exists) { // has save, has preview
