@@ -376,13 +376,15 @@ void save_screenshot(SDL_Surface* surface) {
 	put_file(kScreenshotsPath, count);
 }
 
-#define kResumeStatePath "/tmp/mmenu_state"
-int ResumeState(void) {
-	if (!exists(kResumeStatePath)) return -1;
+#define kResumeSlotPath "/tmp/mmenu_slot.txt"
+int ResumeSlot(void) {
+	if (!exists(kResumeSlotPath)) return -1;
 	
 	char tmp[16];
-	get_file(kResumeStatePath, tmp);
-	return atoi(tmp);
+	get_file(kResumeSlotPath, tmp);
+	unlink(kResumeSlotPath);
+	slot = atoi(tmp); // update slot so mmenu has it preselected as well
+	return slot;
 }
 
 MenuReturnStatus ShowMenu(char* rom_path, char* save_path_template, SDL_Surface* frame, MenuReturnEvent keyEvent) {

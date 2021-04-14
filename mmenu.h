@@ -18,9 +18,9 @@ typedef enum MenuReturnEvent {
 } MenuReturnEvent;
 
 typedef MenuReturnStatus (*ShowMenu_t)(char* rom_path, char* save_path_template, SDL_Surface* frame, MenuReturnEvent keyEvent);
-
 MenuReturnStatus ShowMenu(char* rom_path, char* save_path_template, SDL_Surface* frame, MenuReturnEvent keyEvent);
 
-int ResumeState(void);
+typedef int (*ResumeSlot_t)(void);
+int ResumeSlot(void);
 
 #endif  // menu_h__
