@@ -376,6 +376,15 @@ void save_screenshot(SDL_Surface* surface) {
 	put_file(kScreenshotsPath, count);
 }
 
+#define kResumeStatePath "/tmp/mmenu_state"
+int ResumeState(void) {
+	if (!exists(kResumeStatePath)) return -1;
+	
+	char tmp[16];
+	get_file(kResumeStatePath, tmp);
+	return atoi(tmp);
+}
+
 MenuReturnStatus ShowMenu(char* rom_path, char* save_path_template, SDL_Surface* frame, MenuReturnEvent keyEvent) {
 	SDL_Surface* text;
 	SDL_Surface* copy = SDL_CreateRGBSurface(SDL_SWSURFACE, 320, 240, 16, 0, 0, 0, 0);	
@@ -388,6 +397,7 @@ MenuReturnStatus ShowMenu(char* rom_path, char* save_path_template, SDL_Surface*
 	char* tmp;
 	char rom_file[128]; // with extension
 	char rom_name[128]; // without extension or cruft
+	char slot_path[128];
 	
 	tmp = strrchr(rom_path,'/');
 	if (tmp==NULL) tmp = rom_path;
@@ -413,6 +423,13 @@ MenuReturnStatus ShowMenu(char* rom_path, char* save_path_template, SDL_Surface*
 	tmp = strchr(tmp, '/') + 1;
 	strcpy(tmp, ".mmenu");
 	mkdir(mmenu_dir, 0755);
+	
+	sprintf(slot_path, "%s/%s.txt", mmenu_dir, rom_file);
+	strcpy(slot_path, mmenu_dir);
+	strcpy(slot_path+strlen(slot_path), "/");
+	strcpy(slot_path+strlen(slot_path), rom_file);
+	tmp = strrchr(slot_path, '.') + 1;
+	strcpy(tmp, "txt");
 	
 	// does this game have an m3u?
 	int rom_disc = -1;
@@ -625,6 +642,12 @@ MenuReturnStatus ShowMenu(char* rom_path, char* save_path_template, SDL_Surface*
 							case kItemExitGame:
 								status = kStatusExitGame;
 							break;
+						}
+						
+						if (selected==kItemSave || selected==kItemLoad) {
+							char slot_str[8];
+							sprintf(slot_str, "%d", slot);
+							put_file(slot_path, slot_str);
 						}
 						
 						is_dirty = 1;
