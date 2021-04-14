@@ -407,12 +407,12 @@ MenuReturnStatus ShowMenu(char* rom_path, char* save_path_template, SDL_Surface*
 	}
 	if (rom_name[0]=='\0') strcpy(rom_name,safe);
 	
-	char bmp_dir[128]; // /full/path/to/rom_dir/.mmenu
-	strcpy(bmp_dir, rom_path);
-	tmp = bmp_dir + strlen("/mnt/SDCARD/Roms/");
+	char mmenu_dir[128]; // /full/path/to/rom_dir/.mmenu
+	strcpy(mmenu_dir, rom_path);
+	tmp = mmenu_dir + strlen("/mnt/SDCARD/Roms/");
 	tmp = strchr(tmp, '/') + 1;
 	strcpy(tmp, ".mmenu");
-	mkdir(bmp_dir, 0755);
+	mkdir(mmenu_dir, 0755);
 	
 	// does this game have an m3u?
 	int rom_disc = -1;
@@ -569,7 +569,7 @@ MenuReturnStatus ShowMenu(char* rom_path, char* save_path_template, SDL_Surface*
 				
 					if (is_dirty && (selected==kItemSave || selected==kItemLoad) && supports_save_load) {
 						sprintf(save_path, save_path_template, slot);
-						sprintf(bmp_path, "%s/%s.%d.bmp", bmp_dir, rom_file, slot);
+						sprintf(bmp_path, "%s/%s.%d.bmp", mmenu_dir, rom_file, slot);
 					
 						save_exists = exists(save_path);
 						preview_exists = save_exists && exists(bmp_path);
