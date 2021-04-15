@@ -509,6 +509,11 @@ MenuReturnStatus ShowMenu(char* rom_path, char* save_path_template, SDL_Surface*
 	
 	int status = kStatusContinue;
 	int selected = 0; // resets every launch
+	if (exists(slot_path)) {
+		char tmp[16];
+		get_file(slot_path, tmp);
+		slot = atoi(tmp);
+	}
 	
 	char save_path[256];
 	char bmp_path[324];
