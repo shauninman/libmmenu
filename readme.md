@@ -77,8 +77,6 @@ Checkout or download this repo, open up the makefile, and make sure `CROSS_COMPI
 
 ## Integrating
 
-### ShowMenu()
-
 Open up the emulator's makefile and add the following to `LDFLAGS`:
 
 	-lSDL_image -lSDL_ttf -ldl
@@ -100,7 +98,9 @@ Then in `main()` (or equivalent) try to open the library:
 
 	mmenu = dlopen("libmmenu.so", RTLD_LAZY);
 
-Finally, replace the call to the emulator's menu function (simply called `menu()` in this example) with the following:
+### ShowMenu()
+
+Replace the call to the emulator's menu function (simply called `menu()` in this example) with the following:
 
 	if (mmenu) {
 		ShowMenu_t ShowMenu = (ShowMenu_t)dlsym(mmenu, "ShowMenu");
