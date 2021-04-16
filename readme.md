@@ -7,7 +7,7 @@
 To be a good citizen in the MinUI eco-system an emulator or native game should observe the following:
 
 * The MENU button (and only the MENU button) should open the menu (and only open the menu). The player should not be able to rebind the MENU button.
-* State and config files (including bios) should be saved inside a _hidden_ folder inside an emulator's rom folder or a native game's pak.
+* Save, state, and config files (including bios) should be saved inside a _hidden_ folder inside an emulator's rom folder or a native game's pak.
 * Default key bindings should map as closely as possible to the original console, either by position, or preferably, by name (eg. don't map shoulder buttons or START/SELECT to Y/X). While unlabeled on the device, the agreed upon arrangement is:
 
 		    L                                                   R
