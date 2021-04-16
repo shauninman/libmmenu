@@ -4,10 +4,10 @@
 
 ## Prerequisites
 
-To be a good citizen in the MinUI eco-system an emulator should observe the following:
+To be a good citizen in the MinUI eco-system an emulator or native game should observe the following:
 
 * The MENU button (and only the MENU button) should open the menu (and only open the menu). The player should not be able to rebind the MENU button.
-* Emulators should save state and config files (including bios) inside a _hidden_ folder inside their rom folder.
+* State and config files (including bios) should be saved inside a _hidden_ folder inside an emulator's rom folder or a native game's pak.
 * Default key bindings should map as closely as possible to the original console, either by position, or preferably, by name (eg. don't map shoulder buttons or START/SELECT to Y/X). While unlabeled on the device, the agreed upon arrangement is:
 
 		    L                                                   R
@@ -17,8 +17,9 @@ To be a good citizen in the MinUI eco-system an emulator should observe the foll
 
 * Power and reset buttons or custom hotkeys should not be bound by default (eg. Mapping "load quicksave" to L while convenient will conflict with the system-wide brightness shortcut and could cause an unsuspecting player to lose their progress. Mapping power and reset to START and SELECT is just cruel.)
 * Emulators should not draw messages on screen, "Press MENU to open menu" and "Loaded save slot 0" should be obvious. On such a small screen, these messages can obscure important gameplay information that can, at best, result in an inconvenient delay, or at worst, a game over.
-* Emulators should clear the screen to black before quitting so input feels responsive.
-* Emulators should default to integer scaling where possible or native if not. (The one exception I've found is the [1.5x Sharp scaler][scaler] I created that prioritizes consistent stroke weight in lineart and text for scaling the Game Boy's 160x144 screen.)
+* Default to integer scaling where possible or native if not. (The one exception I've found is the [1.5x Sharp scaler][scaler] I created that prioritizes consistent stroke weight in lineart and text for scaling the Game Boy's 160x144 screen.)
+* Pause audio when opening the menu and resume upon closing.
+* Clear the screen to black before quitting so input feels responsive.
 
 [scaler]:https://github.com/shauninman/gambatte-dms/blob/trimui-model-s/gambatte_sdl/scaler.c#L116
 
@@ -28,13 +29,13 @@ Design is how it works, let's keep it simple and consistent.
 
 ### `ShowMenu()`
 
-Instead of calling an emulator's built-in menu function, you call libmmenu's:
+Instead of calling an emulator or native game's built-in menu function, you call libmmenu's:
 
  	MenuReturnStatus ShowMenu(char* rom_path, char* save_path_template, SDL_Surface* frame, MenuReturnEvent keyEvent)
 
 `rom_path` is the full path to the currently open rom (essentially `argv[1]`, eg. `/mnt/SDCARD/Roms/Game Boy/Tetris.gb`).
 
-`save_path_template` is the full path to a save state with an `%i` in place of the slot number. This is usually unique to the emulator but shouldn't be too hard to create (eg. `/mnt/SDCARD/Roms/Game Boy/.gambatte/saves/Tetris_%i.gqs`).
+`save_path_template` is the full path to a save state with an `%i` in place of the slot number. This is usually unique to the emulator but shouldn't be too hard to create (eg. `/mnt/SDCARD/Roms/Game Boy/.gambatte/saves/Tetris_%i.gqs`). Native games can pass `NULL` to only show the Continue, Advanced, and Exit options.
 
 `screen` is a pointer to an `SDL_Surface` representing the fullscreen of the emulator (usually the return value of the `SDL_SetVideoMode()` call). It should be 320x160. (Don't pass the emulated console's screen!) libmmenu makes a copy and leaves the original surface untouched.
 
