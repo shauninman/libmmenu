@@ -162,7 +162,7 @@ Some emulators need a couple frames to initialize audio correctly so you might n
 
 ## Custom launcher considerations
 
-If you are creating a custom launcher for Trimui (hi eggs!) and want to support libmmenu you just need to be sure to add `/mnt/SDCARD/System/lib` to your `LD_LIBRARY_PATH`:
+If you are also creating a custom launcher for Trimui (hi eggs!) and want to support libmmenu you just need to be sure to add `/mnt/SDCARD/System/lib` to your `LD_LIBRARY_PATH` before launching a MinUI-supported emulator or native game:
 
 	export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/mnt/SDCARD/System/lib"
 
