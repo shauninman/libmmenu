@@ -387,6 +387,14 @@ int ResumeSlot(void) {
 	return slot;
 }
 
+#define kLastPath "/tmp/last.txt"
+#define kChangeDiscPath "/tmp/change_disc.txt"
+int ChangeDisc(char* disc_path) {
+	if (!exists(kChangeDiscPath)) return 0;
+	get_file(kChangeDiscPath, disc_path);
+	return 1;
+}
+
 MenuReturnStatus ShowMenu(char* rom_path, char* save_path_template, SDL_Surface* frame, MenuReturnEvent keyEvent) {
 	SDL_Surface* text;
 	SDL_Surface* copy = SDL_CreateRGBSurface(SDL_SWSURFACE, 320, 240, 16, 0, 0, 0, 0);	
@@ -621,11 +629,11 @@ MenuReturnStatus ShowMenu(char* rom_path, char* save_path_template, SDL_Surface*
 									status = kStatusChangeDisc;
 									char* disc_path = disc_paths[disc];
 									char last_path[256];
-									get_file("/tmp/last.txt", last_path);
+									get_file(kLastPath, last_path);
 									if (!exact_match(last_path, "/mnt/SDCARD/Recently Played")) {
-										put_file("/tmp/last.txt", disc_path);
+										put_file(kLastPath, disc_path);
 									}
-									put_file("/tmp/change_disc.txt", disc_path);
+									put_file(kChangeDiscPath, disc_path);
 								}
 								else {
 									status = kStatusContinue;

@@ -23,4 +23,7 @@ MenuReturnStatus ShowMenu(char* rom_path, char* save_path_template, SDL_Surface*
 typedef int (*ResumeSlot_t)(void);
 int ResumeSlot(void);
 
+typedef int (*ChangeDisc_t)(char* disc_path);
+int ChangeDisc(char* disc_path);
+
 #endif  // menu_h__
