@@ -352,7 +352,7 @@ static int slot = 0;
 
 #define kRootDir "/mnt/SDCARD"
 #define kScreenshotsPath kRootDir "/.minui/screenshots.txt"
-#define kScreenshotPathTemplate kRootDir "/.minui/screenshots/screenshot-%i.bmp"
+#define kScreenshotPathTemplate kRootDir "/.minui/screenshots/screenshot-%03i.bmp"
 static int enable_screenshots = 0;
 static int screenshots = 0;
 void load_screenshots(void) {
