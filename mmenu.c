@@ -96,10 +96,11 @@ static int exists(char* path) {
 // TODO: just copied from MinUI/main.c :shrug:
 
 static int* key[10];
+static void (*loadSystemState)(void*);
+static void (*saveSystemState)(void*);
 static int (*GetKeyShm)(void*,int);
+static void (*SetKeyShm)(void*,int,int);
 
-static void* (*setVolume)(int);
-static void (*setBrightness)(int);
 static int getVolume(void) {
 	return GetKeyShm(key, 0);
 }
@@ -107,15 +108,33 @@ static int getBrightness(void) {
 	return GetKeyShm(key, 1);
 }
 
+static void setVolume(int value) { // 0-20
+	SetKeyShm(key,0,value);
+	saveSystemState(key);
+	
+	int val = value * (63.0f / 20.0f);
+	char cmd[32];
+	sprintf(cmd, "tinymix set 22 %d", val);
+	system(cmd);
+}
+static void setBrightness(int value) { // 0-10
+	SetKeyShm(key,1,value);
+	saveSystemState(key);
+	
+	int val = value<9 ? 70 + (value * 3) : 130 - (6 * (10-value));
+	char cmd[64];
+	sprintf(cmd, "echo %d > /sys/class/disp/disp/attr/lcdbl", val);
+	system(cmd);
+}
+
 static void initTrimuiAPI(void) {
-	void* libtinyalsa = dlopen("/usr/lib/libtinyalsa.so", RTLD_NOW|RTLD_GLOBAL);
 	void* libtmenu = dlopen("/usr/trimui/lib/libtmenu.so", RTLD_LAZY);
 
-	setBrightness = dlsym(libtmenu, "setLCDBrightness");
-	setVolume = dlsym(libtmenu, "sunxi_set_volume");
-
 	void (*InitKeyShm)(int* [10]) = dlsym(libtmenu, "InitKeyShm");
+	loadSystemState = dlsym(libtmenu, "loadSystemState");
+	saveSystemState = dlsym(libtmenu, "saveSystemState");
 	GetKeyShm = dlsym(libtmenu, "GetKeyShm");
+	SetKeyShm = dlsym(libtmenu, "SetKeyShm");
 
 	InitKeyShm(key);
 }
