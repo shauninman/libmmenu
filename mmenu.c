@@ -231,14 +231,14 @@ static void fauxSleep(void) {
 ///////////////////////////////////////
 
 __attribute__((constructor)) static void init(void) {
-	signal(SIGSEGV, error_handler); // runtime error reporting
+	// signal(SIGSEGV, error_handler); // runtime error reporting
 	
 	initTrimuiAPI();
 	
-	SDL_Init(SDL_INIT_VIDEO);
+	// SDL_Init(SDL_INIT_VIDEO);
 	TTF_Init();
 	
-	screen = SDL_SetVideoMode(320, 240, 16, SDL_HWSURFACE | SDL_DOUBLEBUF);
+	// screen = SDL_SetVideoMode(320, 240, 16, SDL_HWSURFACE | SDL_DOUBLEBUF);
 	buffer = SDL_CreateRGBSurface(SDL_SWSURFACE, 320, 240, 16, 0, 0, 0, 0);
 	
 	font = TTF_OpenFont("/usr/res/BPreplayBold.otf", 16);
@@ -288,13 +288,12 @@ __attribute__((destructor)) static void quit(void) {
 	SDL_FreeSurface(ui_top_bar);
 	SDL_FreeSurface(overlay);
 	SDL_FreeSurface(buffer);
-	SDL_FreeSurface(screen);
 	
 	TTF_CloseFont(tiny);
 	TTF_CloseFont(font);
 	
 	TTF_Quit();
-	SDL_Quit();
+	// SDL_Quit();
 }
 
 #define kItemCount 5
@@ -415,6 +414,7 @@ int ChangeDisc(char* disc_path) {
 }
 
 MenuReturnStatus ShowMenu(char* rom_path, char* save_path_template, SDL_Surface* frame, MenuReturnEvent keyEvent) {
+	screen = SDL_GetVideoSurface();
 	SDL_Surface* text;
 	SDL_Surface* copy = SDL_CreateRGBSurface(SDL_SWSURFACE, 320, 240, 16, 0, 0, 0, 0);	
 	SDL_BlitSurface(frame, NULL, copy, NULL);
