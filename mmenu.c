@@ -614,8 +614,10 @@ MenuReturnStatus ShowMenu(char* rom_path, char* save_path_template, SDL_Surface*
 					}
 					
 					if (enable_screenshots) {
-						if (key==TRIMUI_Y) save_screenshot(NULL);
-						if (key==TRIMUI_X) save_screenshot(copy);
+						if (key==TRIMUI_Y) {
+							save_screenshot(NULL);
+							save_screenshot(copy);
+						}
 					}
 				
 					if (is_dirty && (selected==kItemSave || selected==kItemLoad) && supports_save_load) {
