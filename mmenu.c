@@ -546,12 +546,13 @@ MenuReturnStatus ShowMenu(char* rom_path, char* save_path_template, SDL_Surface*
 	char save_path[256];
 	char bmp_path[324];
 	
+	SDL_Event event;
+	int is_dirty = 1;
 	int quit = 0;
 	int acted = 0;
-	int is_dirty = 1;
 	int save_exists = 0;
 	int preview_exists = 0;
-	SDL_Event event;
+	int disable_sleep = exists("/tmp/disable-sleep");
 	unsigned long cancel_start = SDL_GetTicks();
 	while (!quit) {
 		unsigned long frame_start = SDL_GetTicks();
@@ -694,7 +695,7 @@ MenuReturnStatus ShowMenu(char* rom_path, char* save_path_template, SDL_Surface*
 		}
 		
 		#define kSleepDelay 30000
-		if (pressed_menu || frame_start-cancel_start>=kSleepDelay) {
+		if (pressed_menu || (!disable_sleep && frame_start-cancel_start>=kSleepDelay)) {
 			SDL_FillRect(buffer, NULL, 0);
 			SDL_BlitSurface(buffer, NULL, screen, NULL);
 			SDL_Flip(screen);
