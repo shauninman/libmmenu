@@ -46,6 +46,11 @@ static SDL_Surface* ui_arrow_right_w;
 static SDL_Surface* ui_selected_dot;
 static SDL_Surface* ui_empty_slot;
 static SDL_Surface* ui_no_preview;
+static SDL_Surface* ui_power_0_icon;  
+static SDL_Surface* ui_power_20_icon; 
+static SDL_Surface* ui_power_50_icon; 
+static SDL_Surface* ui_power_80_icon; 
+static SDL_Surface* ui_power_100_icon;
 
 static TTF_Font* font;
 static TTF_Font* tiny;
@@ -138,6 +143,15 @@ static void initTrimuiAPI(void) {
 	SetKeyShm = dlsym(libtmenu, "SetKeyShm");
 
 	InitKeyShm(key);
+}
+static int getBatteryLevel(void) {
+	int value = -1;
+	FILE* file = fopen("/sys/devices/soc/1c23400.battery/adc", "r");
+	if (file!=NULL) {
+		fscanf(file, "%i", &value);
+		fclose(file);
+	}
+	return value;
 }
 
 #define kCPUDead 0x0112 // 16MHz (dead)
@@ -260,9 +274,20 @@ __attribute__((constructor)) static void init(void) {
 	
 	ui_empty_slot = TTF_RenderUTF8_Blended(tiny, "Empty Slot", gold);
 	ui_no_preview = TTF_RenderUTF8_Blended(tiny, "No Preview", gold);
+	
+	ui_power_0_icon   = IMG_Load("/usr/trimui/res/skin/power-0%-icon.png");
+	ui_power_20_icon  = IMG_Load("/usr/trimui/res/skin/power-20%-icon.png");
+	ui_power_50_icon  = IMG_Load("/usr/trimui/res/skin/power-50%-icon.png");
+	ui_power_80_icon  = IMG_Load("/usr/trimui/res/skin/power-80%-icon.png");
+	ui_power_100_icon = IMG_Load("/usr/trimui/res/skin/power-full-icon.png");
 }
 
 __attribute__((destructor)) static void quit(void) {
+	SDL_FreeSurface(ui_power_0_icon);
+	SDL_FreeSurface(ui_power_20_icon);
+	SDL_FreeSurface(ui_power_50_icon);
+	SDL_FreeSurface(ui_power_80_icon);
+	SDL_FreeSurface(ui_power_100_icon);
 	SDL_FreeSurface(ui_empty_slot);
 	SDL_FreeSurface(ui_no_preview);
 	SDL_FreeSurface(ui_selected_dot);
@@ -719,9 +744,26 @@ MenuReturnStatus ShowMenu(char* rom_path, char* save_path_template, SDL_Surface*
 			
 				// game name
 				text = TTF_RenderUTF8_Blended(tiny, rom_name, gold);
-				SDL_BlitSurface(text, NULL, buffer, &(SDL_Rect){(320-text->w)/2,6,0,0});
+				int tw = text->w;
+				int tx = (320-tw)/2;
+				if (tx<6) {
+					tx = 6;
+					tw = 291;
+				}
+
+				SDL_BlitSurface(text, &(SDL_Rect){0,0,tw,text->h}, buffer, &(SDL_Rect){tx,6,0,0});
 				SDL_FreeSurface(text);
-			
+				
+				// battery
+				int charge = getBatteryLevel();
+				SDL_Surface* ui_power_icon;
+				if (charge<41)		ui_power_icon = ui_power_0_icon;
+				else if (charge<43) ui_power_icon = ui_power_20_icon;
+				else if (charge<44) ui_power_icon = ui_power_50_icon;
+				else if (charge<46) ui_power_icon = ui_power_80_icon;
+				else				ui_power_icon = ui_power_100_icon;
+				SDL_BlitSurface(ui_power_icon, NULL, buffer, &(SDL_Rect){297,3,0,0});
+				
 				// menu
 				{
 					int x = 14;
