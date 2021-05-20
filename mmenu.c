@@ -441,7 +441,7 @@ MenuReturnStatus ShowMenu(char* rom_path, char* save_path_template, SDL_Surface*
 	
 	int supports_save_load = save_path_template!=NULL;
 	
-	SDL_EnableKeyRepeat(300,100);
+	SDL_EnableKeyRepeat(300,100); // TODO: does this need to be reset?
 	
 	char* tmp;
 	char rom_file[128]; // with extension
@@ -885,7 +885,7 @@ MenuReturnStatus ShowMenu(char* rom_path, char* save_path_template, SDL_Surface*
 		free(disc_paths[i]);
 	}
 	
+	SDL_EnableKeyRepeat(0,100);
 	putenv("trimui_show=no");
-	
 	return status;
 }
