@@ -444,9 +444,9 @@ MenuReturnStatus ShowMenu(char* rom_path, char* save_path_template, SDL_Surface*
 	SDL_EnableKeyRepeat(300,100); // TODO: does this need to be reset?
 	
 	char* tmp;
-	char rom_file[128]; // with extension
-	char rom_name[128]; // without extension or cruft
-	char slot_path[128];
+	char rom_file[256]; // with extension
+	char rom_name[256]; // without extension or cruft
+	char slot_path[256];
 	
 	tmp = strrchr(rom_path,'/');
 	if (tmp==NULL) tmp = rom_path;
@@ -458,7 +458,7 @@ MenuReturnStatus ShowMenu(char* rom_path, char* save_path_template, SDL_Surface*
 	if (tmp!=NULL) tmp[0] = '\0';
 	
 	// remove trailing parens (round and square)
-	char safe[128];
+	char safe[256];
 	strcpy(safe,rom_name);
 	while ((tmp=strrchr(rom_name, '('))!=NULL || (tmp=strrchr(rom_name, '['))!=NULL) {
 		tmp[0] = '\0';
@@ -466,7 +466,7 @@ MenuReturnStatus ShowMenu(char* rom_path, char* save_path_template, SDL_Surface*
 	}
 	if (rom_name[0]=='\0') strcpy(rom_name,safe);
 	
-	char mmenu_dir[128]; // /full/path/to/rom_dir/.mmenu
+	char mmenu_dir[256]; // /full/path/to/rom_dir/.mmenu
 	strcpy(mmenu_dir, rom_path);
 	tmp = mmenu_dir + strlen("/mnt/SDCARD/Roms/");
 	tmp = strchr(tmp, '/') + 1;
@@ -501,14 +501,14 @@ MenuReturnStatus ShowMenu(char* rom_path, char* save_path_template, SDL_Surface*
 		tmp[0] = '\0';
 	
 		// path to parent directory
-		char base_path[128];
+		char base_path[256];
 		strcpy(base_path, m3u_path);
 	
 		tmp = strrchr(m3u_path, '/');
 		tmp[0] = '\0';
 	
 		// get parent directory name
-		char dir_name[128];
+		char dir_name[256];
 		tmp = strrchr(m3u_path, '/');
 		strcpy(dir_name, tmp);
 	
