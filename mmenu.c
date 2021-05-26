@@ -153,6 +153,39 @@ static int getBatteryLevel(void) {
 	}
 	return value;
 }
+#define kBatteryReaderSmoothness 10
+typedef struct BatteryReader {
+	int values[kBatteryReaderSmoothness];
+	int total;
+	int i;
+	int value;
+} BatteryReader;
+static BatteryReader* BatteryReader_new(void) {
+	BatteryReader* self = malloc(sizeof(BatteryReader));
+	int value = getBatteryLevel();
+	for (int i=0; i<kBatteryReaderSmoothness; i++) {
+		self->values[i] = value;
+	}
+	self->total = value * kBatteryReaderSmoothness;
+	self->i = 0;
+	self->value = value;
+	return self;
+}
+static int BatteryReader_getLevel(BatteryReader* self) {
+	int value = getBatteryLevel();
+	self->total -= self->values[self->i];
+	self->values[self->i] = value;
+	self->total += value;
+	self->i += 1;
+	if (self->i>=kBatteryReaderSmoothness) self->i -= kBatteryReaderSmoothness;
+	self->value = self->total / kBatteryReaderSmoothness;
+	return self->value;
+}
+// NOTE: just use free() :sweat_smile:
+// static void BatteryReader_free(BatteryReader* self) {
+// 	free(self);
+// }
+static BatteryReader* battery = NULL;
 
 #define kCPUDead 0x0112 // 16MHz (dead)
 #define kCPULow 0x00c00532 // 192MHz (lowest)
@@ -280,9 +313,13 @@ __attribute__((constructor)) static void init(void) {
 	ui_power_50_icon  = IMG_Load("/usr/trimui/res/skin/power-50%-icon.png");
 	ui_power_80_icon  = IMG_Load("/usr/trimui/res/skin/power-80%-icon.png");
 	ui_power_100_icon = IMG_Load("/usr/trimui/res/skin/power-full-icon.png");
+	
+	battery = BatteryReader_new();
 }
 
 __attribute__((destructor)) static void quit(void) {
+	free(battery);
+	
 	SDL_FreeSurface(ui_power_0_icon);
 	SDL_FreeSurface(ui_power_20_icon);
 	SDL_FreeSurface(ui_power_50_icon);
@@ -757,7 +794,7 @@ MenuReturnStatus ShowMenu(char* rom_path, char* save_path_template, SDL_Surface*
 				SDL_FreeSurface(text);
 				
 				// battery
-				int charge = getBatteryLevel();
+				int charge = BatteryReader_getLevel(battery);
 				SDL_Surface* ui_power_icon;
 				if (charge<41)		ui_power_icon = ui_power_0_icon;
 				else if (charge<43) ui_power_icon = ui_power_20_icon;
