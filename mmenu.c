@@ -51,6 +51,12 @@ static SDL_Surface* ui_power_20_icon;
 static SDL_Surface* ui_power_50_icon; 
 static SDL_Surface* ui_power_80_icon; 
 static SDL_Surface* ui_power_100_icon;
+static SDL_Surface* ui_settings_bg;
+static SDL_Surface* ui_settings_bar_empty;
+static SDL_Surface* ui_settings_bar_full;
+static SDL_Surface* ui_brightness_icon;
+static SDL_Surface* ui_volume_icon;
+static SDL_Surface* ui_mute_icon;
 
 static TTF_Font* font;
 static TTF_Font* tiny;
@@ -314,12 +320,26 @@ __attribute__((constructor)) static void init(void) {
 	ui_power_80_icon  = IMG_Load("/usr/trimui/res/skin/power-80%-icon.png");
 	ui_power_100_icon = IMG_Load("/usr/trimui/res/skin/power-full-icon.png");
 	
+	
+	ui_settings_bg = IMG_Load("/mnt/SDCARD/System/res/settings-bg.png");
+	ui_settings_bar_empty = IMG_Load("/mnt/SDCARD/System/res/settings-bar-empty.png");
+	ui_settings_bar_full = IMG_Load("/mnt/SDCARD/System/res/settings-bar-full.png");
+	ui_brightness_icon = IMG_Load("/mnt/SDCARD/System/res/settings-icon-brightness.png");
+	ui_volume_icon = IMG_Load("/mnt/SDCARD/System/res/settings-icon-volume.png");
+	ui_mute_icon = IMG_Load("/mnt/SDCARD/System/res/settings-icon-volume-mute.png");
+	
 	battery = BatteryReader_new();
 }
 
 __attribute__((destructor)) static void quit(void) {
 	free(battery);
 	
+	SDL_FreeSurface(ui_settings_bg);
+	SDL_FreeSurface(ui_settings_bar_empty);
+	SDL_FreeSurface(ui_settings_bar_full);
+	SDL_FreeSurface(ui_brightness_icon);
+	SDL_FreeSurface(ui_volume_icon);
+	SDL_FreeSurface(ui_mute_icon);
 	SDL_FreeSurface(ui_power_0_icon);
 	SDL_FreeSurface(ui_power_20_icon);
 	SDL_FreeSurface(ui_power_50_icon);
@@ -611,6 +631,11 @@ MenuReturnStatus ShowMenu(char* rom_path, char* save_path_template, SDL_Surface*
 	
 	SDL_Event event;
 	int is_dirty = 1;
+	int is_start_pressed = 0;
+	int is_select_pressed = 0;
+	int show_setting = 0; // 1=brightness,2=volume
+	int setting_value = 0;
+	int setting_max = 0;
 	int quit = 0;
 	int acted = 0;
 	int save_exists = 0;
@@ -623,8 +648,11 @@ MenuReturnStatus ShowMenu(char* rom_path, char* save_path_template, SDL_Surface*
 		while (SDL_PollEvent(&event)) {
 			switch( event.type ){
 				case SDL_KEYUP: {
+					SDLKey key = event.key.keysym.sym;
+					if (key==TRIMUI_START) is_start_pressed = 0;
+					else if (key==TRIMUI_SELECT) is_select_pressed = 0;
+					
 					if (acted && keyEvent==kMenuEventKeyUp) {
-						SDLKey key = event.key.keysym.sym;
 						cancel_start = frame_start;
 						if (key==TRIMUI_B || key==TRIMUI_A) {
 							quit = 1;
@@ -671,6 +699,8 @@ MenuReturnStatus ShowMenu(char* rom_path, char* save_path_template, SDL_Surface*
 							is_dirty = 1;
 						}
 					}
+					else if (key==TRIMUI_START) is_start_pressed = 1;
+					else if (key==TRIMUI_SELECT) is_select_pressed = 1;
 					
 					if (!supports_save_load) {
 						// NOTE: should not be able to reach save load at this point
@@ -769,6 +799,26 @@ MenuReturnStatus ShowMenu(char* rom_path, char* save_path_template, SDL_Surface*
 			is_dirty = 1;
 		}
 		
+		int old_setting = show_setting;
+		int old_value = setting_value;
+		show_setting = 0;
+		if (is_start_pressed && is_select_pressed) {
+			// buh
+		}
+		else if (is_start_pressed) {
+			show_setting = 1;
+			setting_value = getBrightness();
+			setting_max = 10;
+			// printf("show brightness: %i\n", setting_value, setting_max);
+		}
+		else if (is_select_pressed) {
+			show_setting = 2;
+			setting_value = getVolume();
+			setting_max = 20;
+			// printf("show volume: %i\n", setting_value, setting_max);
+		}
+		if (old_setting!=show_setting || old_value!=setting_value) is_dirty = 1;
+		
 		if (is_dirty) {
 			if (acted) {
 				// draw emu screen immediately so the wait for keyup feels like emu delay (because it is)
@@ -802,6 +852,19 @@ MenuReturnStatus ShowMenu(char* rom_path, char* save_path_template, SDL_Surface*
 				else if (charge<46) ui_power_icon = ui_power_80_icon;
 				else				ui_power_icon = ui_power_100_icon;
 				SDL_BlitSurface(ui_power_icon, NULL, buffer, &(SDL_Rect){297,3,0,0});
+				
+				// settings overlay
+				if (show_setting) {
+					// bg
+					SDL_BlitSurface(ui_settings_bg, NULL, buffer, &(SDL_Rect){87,37,0,0});
+					// icon
+					SDL_BlitSurface(show_setting==1?ui_brightness_icon:(setting_value>0?ui_volume_icon:ui_mute_icon), NULL, buffer, &(SDL_Rect){93,41,0,0});
+					// bar
+					SDL_BlitSurface(ui_settings_bar_empty, NULL, buffer, &(SDL_Rect){117,48,0,0});
+					int w = 108 * ((float)setting_value / setting_max);
+					SDL_BlitSurface(ui_settings_bar_full, &(SDL_Rect){0,0,w,4}, buffer, &(SDL_Rect){117,48,w,4});
+					
+				}
 				
 				// menu
 				{
