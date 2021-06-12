@@ -489,9 +489,11 @@ int ChangeDisc(char* disc_path) {
 }
 
 MenuReturnStatus ShowMenu(char* rom_path, char* save_path_template, SDL_Surface* frame, MenuReturnEvent keyEvent) {
-	putenv("trimui_show=yes");
-	
 	screen = SDL_GetVideoSurface();
+
+	// putenv("trimui_show=yes");
+	screen->unused1 = 1; // trimui_show=yes
+
 	SDL_Surface* text;
 	SDL_Surface* copy = SDL_CreateRGBSurface(SDL_SWSURFACE, 320, 240, 16, 0, 0, 0, 0);	
 	SDL_BlitSurface(frame, NULL, copy, NULL);
@@ -986,6 +988,7 @@ MenuReturnStatus ShowMenu(char* rom_path, char* save_path_template, SDL_Surface*
 	}
 	
 	SDL_EnableKeyRepeat(0,100);
-	putenv("trimui_show=no");
+	// putenv("trimui_show=no");
+	screen->unused1 = 0; // trimui_show=now
 	return status;
 }
