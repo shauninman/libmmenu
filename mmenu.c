@@ -491,7 +491,7 @@ int ChangeDisc(char* disc_path) {
 MenuReturnStatus ShowMenu(char* rom_path, char* save_path_template, SDL_Surface* frame, MenuReturnEvent keyEvent) {
 	screen = SDL_GetVideoSurface();
 
-	// putenv("trimui_show=yes");
+	putenv("trimui_show=yes");
 	screen->unused1 = 1; // trimui_show=yes
 
 	SDL_Surface* text;
@@ -988,7 +988,9 @@ MenuReturnStatus ShowMenu(char* rom_path, char* save_path_template, SDL_Surface*
 	}
 	
 	SDL_EnableKeyRepeat(0,100);
-	// putenv("trimui_show=no");
+
+	putenv("trimui_show=no");
 	screen->unused1 = 0; // trimui_show=now
+
 	return status;
 }
