@@ -16,7 +16,8 @@ LDFLAGS = -s -lSDL -lSDL_image -lSDL_ttf -lz -lm -ldl
 
 OPTM=-Ofast
 
-build: 
+build:
+	./dep.sh
 	$(CC) -c -Werror -fpic "$(TARGET).c" $(CFLAGS) $(LDFLAGS) $(OPTM)
 	$(CC) -shared -o "lib$(TARGET).so" "$(TARGET).o"
 	cp "$(TARGET).h" "$(PREFIX)/include"
