@@ -11,6 +11,7 @@
 #include <fcntl.h>
 #include <sys/mman.h>
 
+#include <msettings.h>
 #include "mmenu.h"
 
 #define TRIMUI_UP 		SDLK_UP
@@ -104,52 +105,7 @@ static int exists(char* path) {
 }
 
 ///////////////////////////////////////
-// TODO: just copied from MinUI/main.c :shrug:
 
-static int* key[10];
-static void (*loadSystemState)(void*);
-static void (*saveSystemState)(void*);
-static int (*GetKeyShm)(void*,int);
-static void (*SetKeyShm)(void*,int,int);
-
-static int getVolume(void) {
-	return GetKeyShm(key, 0);
-}
-static int getBrightness(void) {
-	return GetKeyShm(key, 1);
-}
-
-static void setVolume(int value) { // 0-20
-	// SetKeyShm(key,0,value);
-	// saveSystemState(key);
-	
-	int val = value * (63.0f / 20.0f);
-	char cmd[32];
-	sprintf(cmd, "tinymix set 22 %d", val);
-	system(cmd);
-}
-static void setBrightness(int value) { // 0-10
-	// SetKeyShm(key,1,value);
-	// saveSystemState(key);
-	
-	// int val = value<9 ? 70 + (value * 3) : 130 - (6 * (10-value));
-	int val = 70 + (5 * value); // match bin/keymon-patched formula
-	char cmd[64];
-	sprintf(cmd, "echo %d > /sys/class/disp/disp/attr/lcdbl", val);
-	system(cmd);
-}
-
-static void initTrimuiAPI(void) {
-	void* libtmenu = dlopen("/usr/trimui/lib/libtmenu.so", RTLD_LAZY);
-
-	void (*InitKeyShm)(int* [10]) = dlsym(libtmenu, "InitKeyShm");
-	loadSystemState = dlsym(libtmenu, "loadSystemState");
-	saveSystemState = dlsym(libtmenu, "saveSystemState");
-	GetKeyShm = dlsym(libtmenu, "GetKeyShm");
-	SetKeyShm = dlsym(libtmenu, "SetKeyShm");
-
-	InitKeyShm(key);
-}
 static int getBatteryLevel(void) {
 	int value = -1;
 	FILE* file = fopen("/sys/devices/soc/1c23400.battery/adc", "r");
@@ -234,11 +190,8 @@ static void initLCD(void) {
 }
 
 static void fauxSleep(void) {
-	int v = getVolume();
-	int b = getBrightness();
-	// printf("before v:%i b:%i\n",v,b);
-	setVolume(0);
-	system("echo 0 > /sys/class/disp/disp/attr/lcdbl"); // setBrightness(0);
+	SetRawVolume(0);
+	SetRawBrightness(0);
 	setCPU(kCPUDead);
 	
 	system("killall -s STOP keymon");
@@ -267,19 +220,22 @@ static void fauxSleep(void) {
 		}
 	}
 	
-	setVolume(v);
-	setBrightness(b);
-	setCPU(kCPUNormal);
-
 	system("killall -s CONT keymon");
+
+	SetVolume(GetVolume());
+	SetBrightness(GetBrightness());
+	setCPU(kCPUNormal);
 }
 
 ///////////////////////////////////////
 
 __attribute__((constructor)) static void init(void) {
 	// signal(SIGSEGV, error_handler); // runtime error reporting
-	
-	initTrimuiAPI();
+
+	void* libtinyalsa = dlopen("libtinyalsa.so", RTLD_LAZY | RTLD_GLOBAL); // mixer
+	void* librt = dlopen("librt.so.1", RTLD_LAZY | RTLD_GLOBAL); // shm
+	void* libmsettings = dlopen("libmsettings.so", RTLD_LAZY | RTLD_GLOBAL);
+	InitSettings();
 	
 	// SDL_Init(SDL_INIT_VIDEO);
 	TTF_Init();
@@ -369,6 +325,8 @@ __attribute__((destructor)) static void quit(void) {
 	
 	TTF_Quit();
 	// SDL_Quit();
+	
+	QuitSettings();
 }
 
 #define kItemCount 5
@@ -809,13 +767,13 @@ MenuReturnStatus ShowMenu(char* rom_path, char* save_path_template, SDL_Surface*
 		}
 		else if (is_start_pressed) {
 			show_setting = 1;
-			setting_value = getBrightness();
+			setting_value = GetBrightness();
 			setting_max = 10;
 			// printf("show brightness: %i\n", setting_value, setting_max);
 		}
 		else if (is_select_pressed) {
 			show_setting = 2;
-			setting_value = getVolume();
+			setting_value = GetVolume();
 			setting_max = 20;
 			// printf("show volume: %i\n", setting_value, setting_max);
 		}
