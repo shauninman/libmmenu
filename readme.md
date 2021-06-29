@@ -37,7 +37,7 @@ Instead of calling an emulator or native game's built-in menu function, you call
 
 `save_path_template` is the full path to a save state with an `%i` in place of the slot number. This is usually unique to the emulator but shouldn't be too hard to create (eg. `/mnt/SDCARD/Roms/Game Boy/.gambatte/saves/Tetris_%i.gqs`). Native games can pass `NULL` to only show the Continue, Advanced, and Exit options.
 
-`screen` is a pointer to an `SDL_Surface` representing the fullscreen of the emulator (usually the return value of the `SDL_SetVideoMode()` call). It should be 320x160. (Don't pass the emulated console's screen!) libmmenu makes a copy and leaves the original surface untouched.
+`screen` is a pointer to an `SDL_Surface` representing the fullscreen of the emulator (usually the return value of the `SDL_SetVideoMode()` call or `SDL_GetVideoSurface()` if that isn't accessible in the calling scope). It should be 320x240. (Don't pass the emulated console's screen!) libmmenu makes a copy and leaves the original surface untouched.
 
 `keyEvent` is an enum (or integer) indicating whether the function should return on keydown or keyup. Most emulators can pass in `kMenuEventKeyDown` or `0` but if the emulator doesn't distinguish between a button being pressed and a button _just_ being pressed you'll need to pass in `kMenuEventKeyUp` or `1`.
 
