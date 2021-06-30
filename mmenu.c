@@ -29,7 +29,6 @@
 #define TRIMUI_MENU 	SDLK_ESCAPE
 
 static SDL_Surface* screen;
-static SDL_Surface* buffer;
 static SDL_Surface* overlay;
 static SDL_Surface* ui_top_bar;
 static SDL_Surface* ui_bottom_bar;
@@ -233,9 +232,6 @@ __attribute__((constructor)) static void init(void) {
 	// SDL_Init(SDL_INIT_VIDEO);
 	TTF_Init();
 	
-	// screen = SDL_SetVideoMode(320, 240, 16, SDL_HWSURFACE | SDL_DOUBLEBUF);
-	buffer = SDL_CreateRGBSurface(SDL_SWSURFACE, 320, 240, 16, 0, 0, 0, 0);
-	
 	font = TTF_OpenFont("/usr/res/BPreplayBold.otf", 16);
 	tiny = TTF_OpenFont("/usr/res/BPreplayBold.otf", 14);
 	
@@ -307,7 +303,6 @@ __attribute__((destructor)) static void quit(void) {
 	SDL_FreeSurface(ui_bottom_bar);
 	SDL_FreeSurface(ui_top_bar);
 	SDL_FreeSurface(overlay);
-	SDL_FreeSurface(buffer);
 	
 	TTF_CloseFont(tiny);
 	TTF_CloseFont(font);
@@ -738,8 +733,7 @@ MenuReturnStatus ShowMenu(char* rom_path, char* save_path_template, SDL_Surface*
 		
 		#define kSleepDelay 30000
 		if (pressed_menu || (!disable_sleep && frame_start-cancel_start>=kSleepDelay)) {
-			SDL_FillRect(buffer, NULL, 0);
-			SDL_BlitSurface(buffer, NULL, screen, NULL);
+			SDL_FillRect(screen, NULL, 0);
 			SDL_Flip(screen);
 			
 			fauxSleep();
@@ -771,14 +765,14 @@ MenuReturnStatus ShowMenu(char* rom_path, char* save_path_template, SDL_Surface*
 		if (is_dirty) {
 			if (acted) {
 				// draw emu screen immediately so the wait for keyup feels like emu delay (because it is)
-				SDL_BlitSurface(copy, NULL, buffer, NULL);
+				SDL_BlitSurface(copy, NULL, screen, NULL);
 			}
 			else {
 				// ui
-				SDL_BlitSurface(copy, NULL, buffer, NULL); // full screen image effectively clears buffer
-				SDL_BlitSurface(overlay, NULL, buffer, NULL);
-				SDL_BlitSurface(ui_top_bar, NULL, buffer, NULL);
-				SDL_BlitSurface(ui_bottom_bar, NULL, buffer, &(SDL_Rect){0,210,0,0});
+				SDL_BlitSurface(copy, NULL, screen, NULL); // full screen image effectively clears screen
+				SDL_BlitSurface(overlay, NULL, screen, NULL);
+				SDL_BlitSurface(ui_top_bar, NULL, screen, NULL);
+				SDL_BlitSurface(ui_bottom_bar, NULL, screen, &(SDL_Rect){0,210,0,0});
 			
 				// game name
 				text = TTF_RenderUTF8_Blended(tiny, rom_name, gold);
@@ -789,7 +783,7 @@ MenuReturnStatus ShowMenu(char* rom_path, char* save_path_template, SDL_Surface*
 					tw = 291;
 				}
 
-				SDL_BlitSurface(text, &(SDL_Rect){0,0,tw,text->h}, buffer, &(SDL_Rect){tx,6,0,0});
+				SDL_BlitSurface(text, &(SDL_Rect){0,0,tw,text->h}, screen, &(SDL_Rect){tx,6,0,0});
 				SDL_FreeSurface(text);
 				
 				// battery
@@ -800,18 +794,18 @@ MenuReturnStatus ShowMenu(char* rom_path, char* save_path_template, SDL_Surface*
 				else if (charge<44) ui_power_icon = ui_power_50_icon;
 				else if (charge<46) ui_power_icon = ui_power_80_icon;
 				else				ui_power_icon = ui_power_100_icon;
-				SDL_BlitSurface(ui_power_icon, NULL, buffer, &(SDL_Rect){297,3,0,0});
+				SDL_BlitSurface(ui_power_icon, NULL, screen, &(SDL_Rect){297,3,0,0});
 				
 				// settings overlay
 				if (show_setting) {
 					// bg
-					SDL_BlitSurface(ui_settings_bg, NULL, buffer, &(SDL_Rect){87,37,0,0});
+					SDL_BlitSurface(ui_settings_bg, NULL, screen, &(SDL_Rect){87,37,0,0});
 					// icon
-					SDL_BlitSurface(show_setting==1?ui_brightness_icon:(setting_value>0?ui_volume_icon:ui_mute_icon), NULL, buffer, &(SDL_Rect){93,41,0,0});
+					SDL_BlitSurface(show_setting==1?ui_brightness_icon:(setting_value>0?ui_volume_icon:ui_mute_icon), NULL, screen, &(SDL_Rect){93,41,0,0});
 					// bar
-					SDL_BlitSurface(ui_settings_bar_empty, NULL, buffer, &(SDL_Rect){117,48,0,0});
+					SDL_BlitSurface(ui_settings_bar_empty, NULL, screen, &(SDL_Rect){117,48,0,0});
 					int w = 108 * ((float)setting_value / setting_max);
-					SDL_BlitSurface(ui_settings_bar_full, &(SDL_Rect){0,0,w,4}, buffer, &(SDL_Rect){117,48,w,4});
+					SDL_BlitSurface(ui_settings_bar_full, &(SDL_Rect){0,0,w,4}, screen, &(SDL_Rect){117,48,w,4});
 					
 				}
 				
@@ -820,10 +814,10 @@ MenuReturnStatus ShowMenu(char* rom_path, char* save_path_template, SDL_Surface*
 					int x = 14;
 					int y = 75;
 					if (supports_save_load) {
-						SDL_BlitSurface(ui_menu_bg, NULL, buffer, &(SDL_Rect){6,71,0,0});
+						SDL_BlitSurface(ui_menu_bg, NULL, screen, &(SDL_Rect){6,71,0,0});
 					}
 					else {
-						SDL_BlitSurface(ui_menu3_bg, NULL, buffer, &(SDL_Rect){6,71+50,0,0});
+						SDL_BlitSurface(ui_menu3_bg, NULL, screen, &(SDL_Rect){6,71+50,0,0});
 						y += 50;
 					}
 	
@@ -838,16 +832,16 @@ MenuReturnStatus ShowMenu(char* rom_path, char* save_path_template, SDL_Surface*
 							
 						SDL_Color color = gold;
 						if (i==selected) {
-							SDL_BlitSurface(ui_menu_bar, NULL, buffer, &(SDL_Rect){6,y,0,0});
+							SDL_BlitSurface(ui_menu_bar, NULL, screen, &(SDL_Rect){6,y,0,0});
 							color = white;
 						}
 	
 						text = TTF_RenderUTF8_Blended(font, item, color);
-						SDL_BlitSurface(text, NULL, buffer, &(SDL_Rect){x,y+4,0,0});
+						SDL_BlitSurface(text, NULL, screen, &(SDL_Rect){x,y+4,0,0});
 						SDL_FreeSurface(text);
 				
 						if (i==kItemSave || i==kItemLoad || (total_discs && i==kItemContinue)) {
-							SDL_BlitSurface(i==selected?ui_arrow_right_w:ui_arrow_right, NULL, buffer, &(SDL_Rect){132,y+8,0,0});
+							SDL_BlitSurface(i==selected?ui_arrow_right_w:ui_arrow_right, NULL, screen, &(SDL_Rect){132,y+8,0,0});
 						}
 		
 						y += 25;
@@ -856,65 +850,62 @@ MenuReturnStatus ShowMenu(char* rom_path, char* save_path_template, SDL_Surface*
 			
 				// disc change
 				if (total_discs && selected==kItemContinue) {
-					SDL_BlitSurface(ui_disc_bg, NULL, buffer, &(SDL_Rect){148,71,0,0});
+					SDL_BlitSurface(ui_disc_bg, NULL, screen, &(SDL_Rect){148,71,0,0});
 					
 					text = TTF_RenderUTF8_Blended(font, disc_name, gold);
-					SDL_BlitSurface(text, NULL, buffer, &(SDL_Rect){210,75+4,0,0});
+					SDL_BlitSurface(text, NULL, screen, &(SDL_Rect){210,75+4,0,0});
 					SDL_FreeSurface(text);
 				}
 				// slot preview
 				else if (supports_save_load && (selected==kItemSave || selected==kItemLoad)) {
-					SDL_BlitSurface(ui_slot_bg, NULL, buffer, &(SDL_Rect){148,71,0,0});
+					SDL_BlitSurface(ui_slot_bg, NULL, screen, &(SDL_Rect){148,71,0,0});
 				
 					if (preview_exists) { // has save, has preview
 						SDL_Surface* preview = IMG_Load(bmp_path);
-						SDL_BlitSurface(preview, NULL, buffer, &(SDL_Rect){151,74,0,0});
+						SDL_BlitSurface(preview, NULL, screen, &(SDL_Rect){151,74,0,0});
 						SDL_FreeSurface(preview);
 					}
 					else if (save_exists) { // has save, no preview
-						SDL_BlitSurface(ui_no_preview, NULL, buffer, &(SDL_Rect){151+(160-ui_no_preview->w)/2,126,0,0});
+						SDL_BlitSurface(ui_no_preview, NULL, screen, &(SDL_Rect){151+(160-ui_no_preview->w)/2,126,0,0});
 					}
 					else {
-						SDL_BlitSurface(ui_empty_slot, NULL, buffer, &(SDL_Rect){151+(160-ui_empty_slot->w)/2,126,0,0});
+						SDL_BlitSurface(ui_empty_slot, NULL, screen, &(SDL_Rect){151+(160-ui_empty_slot->w)/2,126,0,0});
 					}
-					SDL_BlitSurface(ui_slot_overlay, NULL, buffer, &(SDL_Rect){151,74,0,0});
+					SDL_BlitSurface(ui_slot_overlay, NULL, screen, &(SDL_Rect){151,74,0,0});
 				
-					SDL_BlitSurface(ui_selected_dot, NULL, buffer, &(SDL_Rect){200+(slot * 8),197,0,0});
+					SDL_BlitSurface(ui_selected_dot, NULL, screen, &(SDL_Rect){200+(slot * 8),197,0,0});
 				}
 			
 				// hints
 				{
 					// browse
-					SDL_BlitSurface(ui_menu_icon, NULL, buffer, &(SDL_Rect){10,218-1,0,0});
+					SDL_BlitSurface(ui_menu_icon, NULL, screen, &(SDL_Rect){10,218-1,0,0});
 					text = TTF_RenderUTF8_Blended(tiny, "SLEEP", white);
-					SDL_BlitSurface(text, NULL, buffer, &(SDL_Rect){56,220-1,0,0});
+					SDL_BlitSurface(text, NULL, screen, &(SDL_Rect){56,220-1,0,0});
 					SDL_FreeSurface(text);
 	
 					// A (varies)
-					SDL_BlitSurface(ui_round_button, NULL, buffer, &(SDL_Rect){10+251,218-1,0,0});
+					SDL_BlitSurface(ui_round_button, NULL, screen, &(SDL_Rect){10+251,218-1,0,0});
 					text = TTF_RenderUTF8_Blended(font, "A", bronze);
-					SDL_BlitSurface(text, NULL, buffer, &(SDL_Rect){10+251+6,218,0,0});
+					SDL_BlitSurface(text, NULL, screen, &(SDL_Rect){10+251+6,218,0,0});
 					SDL_FreeSurface(text);
 	
 					text = TTF_RenderUTF8_Blended(tiny, "ACT", white);
-					SDL_BlitSurface(text, NULL, buffer, &(SDL_Rect){10+276,220-1,0,0});
+					SDL_BlitSurface(text, NULL, screen, &(SDL_Rect){10+276,220-1,0,0});
 					SDL_FreeSurface(text);
 	
 					// B Back
-					SDL_BlitSurface(ui_round_button, NULL, buffer, &(SDL_Rect){10+251-68,218-1,0,0});
+					SDL_BlitSurface(ui_round_button, NULL, screen, &(SDL_Rect){10+251-68,218-1,0,0});
 					text = TTF_RenderUTF8_Blended(font, "B", bronze);
-					SDL_BlitSurface(text, NULL, buffer, &(SDL_Rect){10+251+6-68+1,218,0,0});
+					SDL_BlitSurface(text, NULL, screen, &(SDL_Rect){10+251+6-68+1,218,0,0});
 					SDL_FreeSurface(text);
 
 					text = TTF_RenderUTF8_Blended(tiny, "BACK", white);
-					SDL_BlitSurface(text, NULL, buffer, &(SDL_Rect){10+276-68,220-1,0,0});
+					SDL_BlitSurface(text, NULL, screen, &(SDL_Rect){10+276-68,220-1,0,0});
 					SDL_FreeSurface(text);
 				}
 			}
-	
-			SDL_BlitSurface(buffer, NULL, screen, NULL);
 			SDL_Flip(screen);
-			
 			is_dirty = 0;
 		}
 		
