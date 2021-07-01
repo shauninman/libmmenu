@@ -221,6 +221,9 @@ static void fauxSleep(void) {
 
 ///////////////////////////////////////
 
+#define kRootDir "/mnt/SDCARD"
+#define kResDir kRootDir "/System/res/"
+
 __attribute__((constructor)) static void init(void) {
 	// signal(SIGSEGV, error_handler); // runtime error reporting
 
@@ -232,46 +235,46 @@ __attribute__((constructor)) static void init(void) {
 	// SDL_Init(SDL_INIT_VIDEO);
 	TTF_Init();
 	
-	font = TTF_OpenFont("/usr/res/BPreplayBold.otf", 16);
-	tiny = TTF_OpenFont("/usr/res/BPreplayBold.otf", 14);
+	font = TTF_OpenFont(kResDir "BPreplayBold.otf", 16);
+	tiny = TTF_OpenFont(kResDir "BPreplayBold.otf", 14);
 	
 	overlay = SDL_CreateRGBSurface(SDL_SWSURFACE, 320, 240, 16, 0, 0, 0, 0);
 	SDL_SetAlpha(overlay, SDL_SRCALPHA, 0x80);
 	SDL_FillRect(overlay, NULL, 0);
 	
-	ui_top_bar = IMG_Load("/usr/trimui/res/skin/navbg.png");
-	ui_bottom_bar = IMG_Load("/usr/trimui/res/skin/statbg.png");
-	ui_menu_bg = IMG_Load("/usr/trimui/res/skin/menu-5line-bg.png");
-	ui_menu3_bg = IMG_Load("/usr/trimui/res/skin/menu-3line-bg.png");
-	ui_menu_bar = IMG_Load("/usr/trimui/res/skin/list-item-select-bg-short.png");
-	ui_slot_bg = IMG_Load("/mnt/SDCARD/System/res/save-slot-bg.png");
-	ui_slot_overlay = IMG_Load("/mnt/SDCARD/System/res/save-slot-overlay.png");
-	ui_disc_bg = IMG_Load("/mnt/SDCARD/System/res/disc-bg.png");
+	ui_top_bar			= IMG_Load(kResDir "navbg.png");
+	ui_bottom_bar		= IMG_Load(kResDir "statbg.png");
+	ui_menu_bg			= IMG_Load(kResDir "menu-5line-bg.png");
+	ui_menu3_bg			= IMG_Load(kResDir "menu-3line-bg.png");
+	ui_menu_bar			= IMG_Load(kResDir "list-item-select-bg-short.png");
+	ui_slot_bg			= IMG_Load(kResDir "save-slot-bg.png");
+	ui_slot_overlay		= IMG_Load(kResDir "save-slot-overlay.png");
+	ui_disc_bg			= IMG_Load(kResDir "disc-bg.png");
 	
-	ui_browse_icon = IMG_Load("/usr/trimui/res/skin/stat-nav-icon.png");
-	ui_round_button = IMG_Load("/mnt/SDCARD/System/res/nav-bar-item-bg.png");
-	ui_menu_icon = IMG_Load("/usr/trimui/res/skin/stat-menu-icon.png");
+	ui_browse_icon		= IMG_Load(kResDir "stat-nav-icon.png");
+	ui_round_button		= IMG_Load(kResDir "nav-bar-item-bg.png");
+	ui_menu_icon		= IMG_Load(kResDir "stat-menu-icon.png");
 	
-	ui_arrow_right = IMG_Load("/usr/trimui/res/skin/right-arrow-icon-normal-small.png");
-	ui_arrow_right_w = IMG_Load("/usr/trimui/res/skin/right-arrow-small.png");
-	ui_selected_dot = IMG_Load("/mnt/SDCARD/System/res/selected-slot-dot.png");
+	ui_arrow_right 		= IMG_Load(kResDir "right-arrow-icon-normal-small.png");
+	ui_arrow_right_w	= IMG_Load(kResDir "right-arrow-small.png");
+	ui_selected_dot		= IMG_Load(kResDir "selected-slot-dot.png");
 	
-	ui_empty_slot = TTF_RenderUTF8_Blended(tiny, "Empty Slot", gold);
-	ui_no_preview = TTF_RenderUTF8_Blended(tiny, "No Preview", gold);
+	ui_empty_slot 		= TTF_RenderUTF8_Blended(tiny, "Empty Slot", gold);
+	ui_no_preview 		= TTF_RenderUTF8_Blended(tiny, "No Preview", gold);
 	
-	ui_power_0_icon   = IMG_Load("/usr/trimui/res/skin/power-0%-icon.png");
-	ui_power_20_icon  = IMG_Load("/usr/trimui/res/skin/power-20%-icon.png");
-	ui_power_50_icon  = IMG_Load("/usr/trimui/res/skin/power-50%-icon.png");
-	ui_power_80_icon  = IMG_Load("/usr/trimui/res/skin/power-80%-icon.png");
-	ui_power_100_icon = IMG_Load("/usr/trimui/res/skin/power-full-icon.png");
+	ui_power_0_icon		= IMG_Load(kResDir "power-0%-icon.png");
+	ui_power_20_icon	= IMG_Load(kResDir "power-20%-icon.png");
+	ui_power_50_icon	= IMG_Load(kResDir "power-50%-icon.png");
+	ui_power_80_icon	= IMG_Load(kResDir "power-80%-icon.png");
+	ui_power_100_icon	= IMG_Load(kResDir "power-full-icon.png");
 	
 	
-	ui_settings_bg = IMG_Load("/mnt/SDCARD/System/res/settings-bg.png");
-	ui_settings_bar_empty = IMG_Load("/mnt/SDCARD/System/res/settings-bar-empty.png");
-	ui_settings_bar_full = IMG_Load("/mnt/SDCARD/System/res/settings-bar-full.png");
-	ui_brightness_icon = IMG_Load("/mnt/SDCARD/System/res/settings-icon-brightness.png");
-	ui_volume_icon = IMG_Load("/mnt/SDCARD/System/res/settings-icon-volume.png");
-	ui_mute_icon = IMG_Load("/mnt/SDCARD/System/res/settings-icon-volume-mute.png");
+	ui_settings_bg			= IMG_Load(kResDir "settings-bg.png");
+	ui_settings_bar_empty	= IMG_Load(kResDir "settings-bar-empty.png");
+	ui_settings_bar_full	= IMG_Load(kResDir "settings-bar-full.png");
+	ui_brightness_icon		= IMG_Load(kResDir "settings-icon-brightness.png");
+	ui_volume_icon			= IMG_Load(kResDir "settings-icon-volume.png");
+	ui_mute_icon			= IMG_Load(kResDir "settings-icon-volume-mute.png");
 }
 
 __attribute__((destructor)) static void quit(void) {	
@@ -385,7 +388,6 @@ static int exact_match(char* str1, char* str2) {
 #define kSlotCount 8
 static int slot = 0;
 
-#define kRootDir "/mnt/SDCARD"
 #define kScreenshotsPath kRootDir "/.minui/screenshots.txt"
 #define kScreenshotPathTemplate kRootDir "/.minui/screenshots/screenshot-%03i.bmp"
 static int enable_screenshots = 0;
