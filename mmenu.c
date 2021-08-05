@@ -467,6 +467,10 @@ MenuReturnStatus ShowMenu(char* rom_path, char* save_path_template, SDL_Surface*
 		tmp[0] = '\0';
 		tmp = rom_name;
 	}
+	// Trim trailing space
+	tmp = rom_name+strlen(rom_name)-1;
+    while(tmp>rom_name && isspace((unsigned char)*tmp)) tmp--;
+    tmp[1] = '\0';
 	if (rom_name[0]=='\0') strcpy(rom_name,safe);
 	
 	char mmenu_dir[256]; // /full/path/to/rom_dir/.mmenu
